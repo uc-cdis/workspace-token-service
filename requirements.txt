@@ -1,0 +1,9 @@
+Authlib==0.4.1
+-e git+git@github.com:uc-cdis/cdiserrors.git@5f4a4ff62aced11524b53d17c0eeb989d6990950#egg=cdiserrors
+-e git://github.com/uc-cdis/cdislogging@13dc465013e5139de73ebe6dabf7b571314a9324#egg=cdislogging
+cryptography==1.9
+Flask==1.0.2
+Flask-SQLAlchemy==2.3.2
+psycopg2==2.7.4
+python-jose==3.0.0
+requests==2.18.4
