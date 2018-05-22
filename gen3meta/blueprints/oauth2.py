@@ -30,8 +30,8 @@ def do_authorize():
     """
     Send a token request to the OP.
     """
-    token = oauth2.client_do_authorize()
-    return flask.jsonify({'token': token})
+    oauth2.client_do_authorize()
+    return flask.jsonify({'success': 'connected with fence'})
 
 
 @blueprint.route('/logout', methods=['GET'])
