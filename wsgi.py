@@ -1,2 +1,2 @@
-from gen3meta.app import app
+from wts.app import app
 application = app

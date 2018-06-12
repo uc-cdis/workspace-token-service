@@ -19,7 +19,7 @@ app.logger = get_logger(__name__)
 
 
 def load_settings(app):
-    setting_path = os.environ.get('GEN3_METADATA')
+    setting_path = os.environ.get('GEN3_WTS')
     if setting_path and os.path.exists(setting_path):
         app.logger.info('Loading settings from {}'.format(setting_path))
         with open(setting_path, 'r') as f:

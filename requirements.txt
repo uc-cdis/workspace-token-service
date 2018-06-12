@@ -1,6 +1,6 @@
 Authlib==0.4.1
--e git+git@github.com:uc-cdis/cdiserrors.git@5f4a4ff62aced11524b53d17c0eeb989d6990950#egg=cdiserrors
--e git://github.com/uc-cdis/cdislogging@13dc465013e5139de73ebe6dabf7b571314a9324#egg=cdislogging
+git+https://git@github.com/uc-cdis/cdiserrors.git@aa9e4401319725701755fa4be08ad372f639678a#egg=cdiserrors
+git+https://git@github.com/uc-cdis/cdislogging.git@master#egg=cdislogging
 cryptography==1.9
 Flask==1.0.2
 Flask-SQLAlchemy==2.3.2
