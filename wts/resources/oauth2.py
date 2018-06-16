@@ -1,9 +1,10 @@
 from authlib.client.errors import OAuthException
 from authlib.specs.rfc6749.errors import OAuth2Error
 from cdiserrors import AuthError
-from ..models import RefreshToken, db
 import flask
 from jose import jwt
+
+from ..models import RefreshToken, db
 
 
 def client_do_authorize():
@@ -44,7 +45,9 @@ def refresh_refresh_token(token):
     content = jwt.decode(token, key=None, options=options)
     for old_token in db.session.query(RefreshToken).filter_by(userid=flask.g.user.userid):
         db.session.delete(old_token)
-    # TODO: encrypt
+    if hasattr(flask.current_app, 'encryption_key'):
+        token = flask.current_app.encryption_key.encrypt(bytes(token, encoding='utf8')
+
     new_token = RefreshToken(
         token=token, userid=flask.g.user.userid,
         username=flask.g.user.username,

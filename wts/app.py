@@ -6,13 +6,14 @@ import os
 from authlib.client import OAuthClient
 import flask
 from flask import Flask
+from cryptography.fernet import Fernet
+
 from cdislogging import get_logger
 from cdiserrors import APIError
 
-from .auth import login_required
+from .auth_plugins import setup_plugins
 from .blueprints import oauth2, tokens
 from .models import db, Base
-from .tokens import get_access_token
 
 app = Flask(__name__)
 app.logger = get_logger(__name__)
@@ -25,6 +26,8 @@ def load_settings(app):
         with open(setting_path, 'r') as f:
             app.config.update(json.load(f))
         app.secret_key = app.config.get('SECRET_KEY')
+        if 'ENCRYPTION_KEY' in app.config:
+            app.encryption_key = Fernet(app.config['ENCRYPTION_KEY'])
 
 
 def _log_and_jsonify_exception(e):
@@ -48,6 +51,7 @@ def setup():
     load_settings(app)
     if 'OAUTH2' in app.config:
         app.oauth2_client = OAuthClient(**app.config['OAUTH2'])
+    setup_plugins(app)
     db.init_app(app)
     Base.metadata.create_all(bind=db.engine)
     app.register_blueprint(oauth2.blueprint, url_prefix='/oauth2')

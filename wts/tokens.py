@@ -19,8 +19,12 @@ def get_access_token(expires=None):
     if refresh_token.expires <= now:
         raise AuthError('your refresh token is expired, please login again')
 
+    token = refresh_token.token
+    if hasattr(flask.current_app, 'encryption_key'):
+        token = flask.current_app.encryption_key.decrypt(token)
+
     data = {
-        'grant_type': 'refresh_token', 'refresh_token': refresh_token.token
+        'grant_type': 'refresh_token', 'refresh_token': token
     }
     client = flask.current_app.oauth2_client
     auth = (client.client_id, client.client_secret)

@@ -1,12 +1,15 @@
 FROM tiangolo/uwsgi-nginx:python3.6-alpine3.7
 
 
-RUN apk update && apk add bash git postgresql-libs postgresql-dev libffi-dev libressl-dev gcc linux-headers musl-dev
+RUN apk update \
+    && apk add postgresql-libs postgresql-dev libffi-dev libressl-dev \
+    && apk add linux-headers musl-dev gcc \
+    && apk add vim curl bash git
 
 COPY . /workspace-token-service
 COPY ./deployment/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
 COPY ./deployment/nginx/nginx.conf /etc/nginx/
-COPY ./deployment/nginx/uwsgi.conf /etc/nginx/conf.d/
+COPY ./deployment/nginx/uwsgi.conf /etc/nginx/conf.d/nginx.conf
 WORKDIR /workspace-token-service
 
 RUN python -m pip install --upgrade pip \

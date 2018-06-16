@@ -1,4 +1,5 @@
 from .base import DefaultPlugin
+from .k8s import K8SPlugin
 import flask
 
 
@@ -8,6 +9,8 @@ def setup_plugins(app):
     for plugin in plugins:
         if plugin == 'default':
             app.auth_plugins.append(DefaultPlugin())
+        elif plugin == 'k8s':
+            app.auth_plugins.append(K8SPlugin())
 
 
 def find_user():
