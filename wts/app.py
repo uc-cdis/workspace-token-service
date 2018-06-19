@@ -19,14 +19,23 @@ app = Flask(__name__)
 app.logger = get_logger(__name__)
 
 
-def from_env_var(variable):
+def get_var(variable):
     '''
-    get a environment variable, raise exception if it doesn't exist
+    get a secret from env var or mounted secret dir,
+    raise exception if it doesn't exist
     '''
-    value = os.environ.get(variable)
+    secret_dir = os.environ.get('SECRET_DIR')
+    value = None
+    if secret_dir:
+        secret_file = os.path.join(secret_dir, variable)
+        if os.path.isfile(secret_file):
+            with open(secret_file, 'r') as f:
+                value = f.read()
+    else:
+        value = os.environ.get(variable)
     if not value:
         raise Exception(
-            '{} is missing from environment variable, abort initialization'
+            '{} configuration is missing, abort initialization'
             .format(variable)
         )
     return value
@@ -43,16 +52,16 @@ def load_settings(app):
     OIDC_CLIENT_ID: client id for the oidc client for this app
     OIDC_CLIENT_SECRET: client secret for the oidc client for this app
     """
-    app.secret_key = from_env_var('SECRET_KEY')
-    app.encrytion_key = Fernet(from_env_var('ENCRYPTION_KEY'))
+    app.secret_key = get_var('SECRET_KEY')
+    app.encrytion_key = Fernet(get_var('ENCRYPTION_KEY'))
     app.config['SQLALCHEMY_DATABASE_URI'] = (
-        from_env_var('SQLALCHEMY_DATABASE_URI')
+        get_var('SQLALCHEMY_DATABASE_URI')
     )
-    fence_base_url = from_env_var('FENCE_BASE_URL')
-    wts_base_url = from_env_var('WTS_BASE_URL')
+    fence_base_url = get_var('FENCE_BASE_URL')
+    wts_base_url = get_var('WTS_BASE_URL')
     oauth_config = {
-        "client_id": from_env_var('OIDC_CLIENT_ID'),
-        "client_secret": from_env_var('OIDC_CLIENT_SECRET'),
+        "client_id": get_var('OIDC_CLIENT_ID'),
+        "client_secret": get_var('OIDC_CLIENT_SECRET'),
         "api_base_url": fence_base_url,
         "authorize_url": fence_base_url + 'oauth2/authorize',
         "access_token_url": fence_base_url + 'oauth2/token',
