@@ -3,8 +3,9 @@ import kubernetes
 
 from .base import User
 
-
+# set by gen3 automation for gen3 specific app pod
 POD_USERNAME_ANNOTATION = 'gen3username'
+# set by jupyterhub for jupyter pods
 JUPYTER_POD_ANNOTATION = 'hub.jupyter.org/username'
 
 

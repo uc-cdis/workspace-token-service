@@ -46,7 +46,9 @@ def refresh_refresh_token(token):
     for old_token in db.session.query(RefreshToken).filter_by(userid=flask.g.user.userid):
         db.session.delete(old_token)
     if hasattr(flask.current_app, 'encryption_key'):
-        token = flask.current_app.encryption_key.encrypt(bytes(token, encoding='utf8')
+        token = flask.current_app.encryption_key.encrypt(
+            bytes(token, encoding='utf8')
+        )
 
     new_token = RefreshToken(
         token=token, userid=flask.g.user.userid,
