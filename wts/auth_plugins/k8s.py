@@ -34,4 +34,6 @@ class K8SPlugin(object):
     def find_user(self):
         ip = flask.request.remote_addr
         username = get_username_from_ip(ip)
+        if not username:
+            return None
         return User(userid=username, username=username)

@@ -43,7 +43,8 @@ def refresh_refresh_token(token):
         'leeway': 0
     }
     content = jwt.decode(token, key=None, options=options)
-    for old_token in db.session.query(RefreshToken).filter_by(userid=flask.g.user.userid):
+    userid = content['sub']
+    for old_token in db.session.query(RefreshToken).filter_by(userid=userid):
         db.session.delete(old_token)
     if hasattr(flask.current_app, 'encryption_key'):
         token = flask.current_app.encryption_key.encrypt(
@@ -51,8 +52,8 @@ def refresh_refresh_token(token):
         )
 
     new_token = RefreshToken(
-        token=token, userid=flask.g.user.userid,
-        username=flask.g.user.username,
+        token=token, userid=userid,
+        username=content['context']['user']['name'],
         jti=content['jti'], expires=content['exp'])
     db.session.add(new_token)
     db.session.commit()

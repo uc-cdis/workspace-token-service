@@ -25,7 +25,6 @@ def get_authorization_url():
 
 
 @blueprint.route('/authorize', methods=['GET'])
-@login_required
 def do_authorize():
     """
     Send a token request to the OP.

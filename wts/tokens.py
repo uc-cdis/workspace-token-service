@@ -11,7 +11,7 @@ def get_access_token(expires=None):
     now = int(time.time())
     refresh_token = (
         db.session.query(RefreshToken)
-        .filter_by(userid=flask.g.user.userid)
+        .filter_by(username=flask.g.user.username)
         .order_by(RefreshToken.expires.desc()).first()
     )
     if not refresh_token:
