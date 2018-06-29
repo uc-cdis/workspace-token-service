@@ -5,8 +5,7 @@ import flask
 
 def setup_plugins(app):
     app.auth_plugins = []
-    plugins = set(app.config.get('AUTH_PLUGINS', ['default']))
-    for plugin in plugins:
+    for plugin in app.config['AUTH_PLUGINS']:
         if plugin == 'default':
             app.auth_plugins.append(DefaultPlugin())
         elif plugin == 'k8s':

@@ -19,13 +19,13 @@ app = Flask(__name__)
 app.logger = get_logger(__name__)
 
 
-def get_var(variable):
+def get_var(variable, default=None):
     '''
     get a secret from env var or mounted secret dir,
     raise exception if it doesn't exist
     '''
     secret_dir = os.environ.get('SECRET_DIR')
-    value = None
+    value = default
     if secret_dir:
         secret_file = os.path.join(secret_dir, variable)
         if os.path.isfile(secret_file):
@@ -51,6 +51,7 @@ def load_settings(app):
     WTS_BASE_URL: base url for this workspace token service
     OIDC_CLIENT_ID: client id for the oidc client for this app
     OIDC_CLIENT_SECRET: client secret for the oidc client for this app
+    AUTH_PLUGINS: a list of comma separate plugins, eg: k8s
     """
     app.secret_key = get_var('SECRET_KEY')
     app.encrytion_key = Fernet(get_var('ENCRYPTION_KEY'))
@@ -58,6 +59,11 @@ def load_settings(app):
         get_var('SQLALCHEMY_DATABASE_URI')
     )
     fence_base_url = get_var('FENCE_BASE_URL')
+
+    plugins = get_var('AUTH_PLUGINS', 'default')
+    plugins = set(plugins.split(','))
+    app.config['AUTH_PLUGINS'] = plugins
+
     wts_base_url = get_var('WTS_BASE_URL')
     oauth_config = {
         "client_id": get_var('OIDC_CLIENT_ID'),
