@@ -25,14 +25,12 @@ def get_var(variable, default=None):
     raise exception if it doesn't exist
     '''
     secret_dir = os.environ.get('SECRET_DIR')
-    value = default
+    value = os.environ.get(variable, default)
     if secret_dir:
         secret_file = os.path.join(secret_dir, variable)
         if os.path.isfile(secret_file):
             with open(secret_file, 'r') as f:
                 value = f.read()
-    else:
-        value = os.environ.get(variable)
     if not value:
         raise Exception(
             '{} configuration is missing, abort initialization'
