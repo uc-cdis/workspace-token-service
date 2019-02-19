@@ -1,5 +1,5 @@
 Authlib==0.4.1
-git+https://git@github.com/uc-cdis/cdiserrors.git@aa9e4401319725701755fa4be08ad372f639678a#egg=cdiserrors
+cdiserrors==0.1.2
 git+https://git@github.com/uc-cdis/cdislogging.git@master#egg=cdislogging
 cryptography==1.9
 Flask==1.0.2
