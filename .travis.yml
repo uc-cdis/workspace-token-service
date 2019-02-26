@@ -1,0 +1,26 @@
+sudo: false
+language: python
+
+python: "3.6"
+
+cache:
+  - pip
+  - apt
+
+# install dependencies
+install:
+  - pip install pipenv
+  - pipenv install --dev
+  - pipenv graph
+
+before_install:
+  - pip install -r thog_secret_requirements.txt
+  - wget https://raw.githubusercontent.com/lookcrabs/TruffleHog_Scripts/master/th_wrapper.py
+  - pipenv run python th_wrapper.py -w truffles.json -c thog_config.json -g file:///${PWD}/ --check
+
+# run tests
+script:
+  - pipenv run py.test -vv --cov=wts --cov-report xml tests
+
+after_script:
+  - pipenv run python-codacy-coverage -r coverage.xml

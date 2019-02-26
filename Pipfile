@@ -1,0 +1,31 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+codacy-coverage = "*"
+pytest = ">=3.2.3"
+pytest-cov = ">=2.5.1"
+pytest-flask = ">=0.10.0"
+PyYAML = ">=3.13"
+
+[packages]
+
+requests = "*"
+flasgger = "*"
+Flask-CORS = ">=3.0.3"
+authutils = ">=3.0.1"
+cdiserrors = ">=0.1.1"
+cdislogging = ">=0.0.3"
+cdispyutils = ">=0.2.11"
+gdcdictionary = ">=1.1.0"
+datamodelutils = ">=0.4.0"
+indexclient = ">=1.5.7"
+psqlgraph = ">=1.2.3"
+userdatamodel = ">=1.1.7"
+Flask = "*"
+
+
+[requires]
+python_version = "3.6"
