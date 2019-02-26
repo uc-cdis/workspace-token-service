@@ -23,8 +23,8 @@ COPY ./deployment/nginx/uwsgi.conf /etc/nginx/conf.d/nginx.conf
 WORKDIR /$appname
 
 RUN python -m pip install --upgrade pip \
-    && python -m pip install --upgrade setuptools \
-    && pip install -r requirements.txt --src /usr/local/lib/python3.6/site-packages/
+    && pip install pipenv \
+    && pipenv install
 
 RUN mkdir -p /var/www/$appname \
     && mkdir -p /var/www/.cache/Python-Eggs/ \

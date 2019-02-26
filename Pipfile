@@ -11,20 +11,18 @@ pytest-flask = ">=0.10.0"
 PyYAML = ">=3.13"
 
 [packages]
-
 requests = "*"
 flasgger = "*"
-Flask-CORS = ">=3.0.3"
-authutils = ">=3.0.1"
-cdiserrors = ">=0.1.1"
-cdislogging = ">=0.0.3"
-cdispyutils = ">=0.2.11"
-gdcdictionary = ">=1.1.0"
-datamodelutils = ">=0.4.0"
-indexclient = ">=1.5.7"
-psqlgraph = ">=1.2.3"
-userdatamodel = ">=1.1.7"
-Flask = "*"
+flask-cors = "~=3.0"
+cdiserrors = "~=0.1"
+cdislogging = "~=0.0"
+Authlib = "~=0.4"
+cryptography = "~=1.9"
+Flask = "~=1.0"
+Flask-SQLAlchemy = "~=2.3"
+psycopg2 = "~=2.7"
+python-jose = "~=3.0"
+kubernetes = "~=6.0"
 
 
 [requires]
