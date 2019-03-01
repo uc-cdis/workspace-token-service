@@ -76,7 +76,8 @@ def load_settings(app):
         }
     }
     app.config['OIDC'] = oauth_config
-    print(app.config)
+    app.config['SESSION_COOKIE_NAME'] = 'wts'
+    app.config['SESSION_COOKIE_SECURE'] = True
 
 
 def _log_and_jsonify_exception(e):
