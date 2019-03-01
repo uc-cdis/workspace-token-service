@@ -10,6 +10,8 @@ ENV appname=wts
 # number of uwsgi worker processes
 ENV UWSGI_CHEAPER 2
 
+ENV WORKON_HOME=/.venv
+
 RUN apk update \
     && apk add postgresql-libs postgresql-dev libffi-dev libressl-dev \
     && apk add linux-headers musl-dev gcc \
