@@ -19,18 +19,19 @@ app = Flask(__name__)
 app.logger = get_logger(__name__)
 
 
-def get_var(variable, default=None):
+def get_var(variable, default=None, secret_config={}):
     '''
     get a secret from env var or mounted secret dir,
     raise exception if it doesn't exist
     '''
-    secret_dir = os.environ.get('SECRET_DIR')
-    value = os.environ.get(variable, default)
-    if secret_dir:
-        secret_file = os.path.join(secret_dir, variable)
-        if os.path.isfile(secret_file):
-            with open(secret_file, 'r') as f:
-                value = f.read()
+    path = os.environ.get('SECRET_CONFIG')
+    if not secret_config and path:
+        with open(path, 'r') as f:
+            secret_config.update(json.load(f))
+    value = (
+        secret_config.get(variable.lower(), default) or
+        os.environ.get(variable)
+    )
     if not value:
         raise Exception(
             '{} configuration is missing, abort initialization'
