@@ -12,11 +12,12 @@ def test_settings():
         "SECRET_KEY": "test",
         "SQLALCHEMY_DATABASE_URI": "postgresql://postgres:postgres@localhost:5432/wts_test",
         "WTS_BASE_URL": "/",
-        "ENCRYPTION_KEY": Fernet.generate_key().decode("utf-8")
+        "ENCRYPTION_KEY": Fernet.generate_key().decode("utf-8"),
     }
     print(settings)
     for k, v in settings.items():
         os.environ[k] = v
+
 
 @pytest.fixture(scope="session")
 def app():

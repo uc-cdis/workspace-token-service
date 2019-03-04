@@ -13,4 +13,4 @@ class DefaultPlugin(object):
         find user identified in current request
         returns None if no user can be identified
         """
-        return User(userid='test', username='test')
+        return User(userid="test", username="test")

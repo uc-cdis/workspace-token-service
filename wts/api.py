@@ -20,22 +20,18 @@ app.logger = get_logger(__name__)
 
 
 def get_var(variable, default=None, secret_config={}):
-    '''
+    """
     get a secret from env var or mounted secret dir,
     raise exception if it doesn't exist
-    '''
-    path = os.environ.get('SECRET_CONFIG')
+    """
+    path = os.environ.get("SECRET_CONFIG")
     if not secret_config and path:
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             secret_config.update(json.load(f))
-    value = (
-        secret_config.get(variable.lower(), default) or
-        os.environ.get(variable)
-    )
+    value = secret_config.get(variable.lower(), default) or os.environ.get(variable)
     if not value:
         raise Exception(
-            '{} configuration is missing, abort initialization'
-            .format(variable)
+            "{} configuration is missing, abort initialization".format(variable)
         )
     return value
 
@@ -52,42 +48,41 @@ def load_settings(app):
     OIDC_CLIENT_SECRET: client secret for the oidc client for this app
     AUTH_PLUGINS: a list of comma separate plugins, eg: k8s
     """
-    app.secret_key = get_var('SECRET_KEY')
-    app.encrytion_key = Fernet(get_var('ENCRYPTION_KEY'))
+    app.secret_key = get_var("SECRET_KEY")
+    app.encrytion_key = Fernet(get_var("ENCRYPTION_KEY"))
     postgres_creds = get_var("POSTGRES_CREDS_FILE", "")
     if postgres_creds:
         with open(postgres_creds, "r") as f:
             creds = json.load(f)
-            app.config["SQLALCHEMY_DATABASE_URI"] = (
-                "postgresql://{db_username}:{db_password}@{db_host}:5432/{db_database}"
-                .format(**creds)
+            app.config[
+                "SQLALCHEMY_DATABASE_URI"
+            ] = "postgresql://{db_username}:{db_password}@{db_host}:5432/{db_database}".format(
+                **creds
             )
     else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = (
-            get_var('SQLALCHEMY_DATABASE_URI')
-        )
-    fence_base_url = get_var('FENCE_BASE_URL')
+        app.config["SQLALCHEMY_DATABASE_URI"] = get_var("SQLALCHEMY_DATABASE_URI")
+    fence_base_url = get_var("FENCE_BASE_URL")
 
-    plugins = get_var('AUTH_PLUGINS', 'default')
-    plugins = set(plugins.split(','))
-    app.config['AUTH_PLUGINS'] = plugins
+    plugins = get_var("AUTH_PLUGINS", "default")
+    plugins = set(plugins.split(","))
+    app.config["AUTH_PLUGINS"] = plugins
 
-    wts_base_url = get_var('WTS_BASE_URL')
+    wts_base_url = get_var("WTS_BASE_URL")
     oauth_config = {
-        "client_id": get_var('OIDC_CLIENT_ID'),
-        "client_secret": get_var('OIDC_CLIENT_SECRET'),
+        "client_id": get_var("OIDC_CLIENT_ID"),
+        "client_secret": get_var("OIDC_CLIENT_SECRET"),
         "api_base_url": fence_base_url,
-        "authorize_url": fence_base_url + 'oauth2/authorize',
-        "access_token_url": fence_base_url + 'oauth2/token',
-        "refresh_token_url": fence_base_url + 'oauth2/token',
+        "authorize_url": fence_base_url + "oauth2/authorize",
+        "access_token_url": fence_base_url + "oauth2/token",
+        "refresh_token_url": fence_base_url + "oauth2/token",
         "client_kwargs": {
-            "redirect_uri": wts_base_url + 'oauth2/authorize',
-            "scope": "openid data user"
-        }
+            "redirect_uri": wts_base_url + "oauth2/authorize",
+            "scope": "openid data user",
+        },
     }
-    app.config['OIDC'] = oauth_config
-    app.config['SESSION_COOKIE_NAME'] = 'wts'
-    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config["OIDC"] = oauth_config
+    app.config["SESSION_COOKIE_NAME"] = "wts"
+    app.config["SESSION_COOKIE_SECURE"] = True
 
 
 def _log_and_jsonify_exception(e):
@@ -97,7 +92,7 @@ def _log_and_jsonify_exception(e):
     ``AuthError``.
     """
     app.logger.exception(e)
-    if hasattr(e, 'json') and e.json:
+    if hasattr(e, "json") and e.json:
         return flask.jsonify(**e.json), e.code
     else:
         return flask.jsonify(message=e.message), e.code
@@ -109,12 +104,12 @@ app.register_error_handler(APIError, _log_and_jsonify_exception)
 @app.before_first_request
 def setup():
     load_settings(app)
-    app.oauth2_client = OAuthClient(**app.config['OIDC'])
+    app.oauth2_client = OAuthClient(**app.config["OIDC"])
     setup_plugins(app)
     db.init_app(app)
     Base.metadata.create_all(bind=db.engine)
-    app.register_blueprint(oauth2.blueprint, url_prefix='/oauth2')
-    app.register_blueprint(tokens.blueprint, url_prefix='/token')
+    app.register_blueprint(oauth2.blueprint, url_prefix="/oauth2")
+    app.register_blueprint(tokens.blueprint, url_prefix="/token")
 
 
 @app.route("/_status", methods=["GET"])
@@ -137,12 +132,8 @@ def health_check():
         return "Unhealthy", 500
 
 
-@app.route('/')
+@app.route("/")
 def root():
-    return flask.jsonify({
-        '/token': 'get temporary token',
-        '/oauth2': 'oauth2 resources'
-    })
-
-
-
+    return flask.jsonify(
+        {"/token": "get temporary token", "/oauth2": "oauth2 resources"}
+    )

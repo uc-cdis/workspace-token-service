@@ -9,7 +9,7 @@ Base = declarative_base()
 
 
 class RefreshToken(Base):
-    __tablename__ = 'refresh_token'
+    __tablename__ = "refresh_token"
 
     token = Column(String, primary_key=True)
     jti = Column(String, unique=True)

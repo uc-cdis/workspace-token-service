@@ -5,10 +5,10 @@ from ..resources import oauth2
 from ..auth import login_required
 
 
-blueprint = flask.Blueprint('oauth2', __name__)
+blueprint = flask.Blueprint("oauth2", __name__)
 
 
-@blueprint.route('/authorization_url', methods=['GET'])
+@blueprint.route("/authorization_url", methods=["GET"])
 def get_authorization_url():
     """
     Provide a redirect to the authorization endpoint from the OP.
@@ -17,33 +17,33 @@ def get_authorization_url():
     redirect_uri = flask.current_app.oauth2_client.session.redirect_uri
     # Get the authorization URL and the random state; save the state to check
     # later, and return the URL.
-    authorization_url, state = (
-        flask.current_app.oauth2_client.generate_authorize_redirect(redirect_uri)
+    authorization_url, state = flask.current_app.oauth2_client.generate_authorize_redirect(
+        redirect_uri
     )
-    flask.session['state'] = state
+    flask.session["state"] = state
     return flask.redirect(authorization_url)
 
 
-@blueprint.route('/authorize', methods=['GET'])
+@blueprint.route("/authorize", methods=["GET"])
 def do_authorize():
     """
     Send a token request to the OP.
     """
     oauth2.client_do_authorize()
-    return flask.jsonify({'success': 'connected with fence'})
+    return flask.jsonify({"success": "connected with fence"})
 
 
-@blueprint.route('/logout', methods=['GET'])
+@blueprint.route("/logout", methods=["GET"])
 def logout_oauth():
     """
     Log out the user.
     To accomplish this, just revoke the refresh token if provided.
     """
-    url = urljoin(flask.current_app.config.get('USER_API'), '/oauth2/revoke')
-    token = flask.request.form.get('token')
+    url = urljoin(flask.current_app.config.get("USER_API"), "/oauth2/revoke")
+    token = flask.request.form.get("token")
     try:
         flask.current_app.oauth2_client.session.revoke_token(url, token)
     except APIError as e:
-        msg = 'could not log out, failed to revoke token: {}'.format(e.message)
+        msg = "could not log out, failed to revoke token: {}".format(e.message)
         return msg, 400
-    return '', 204
+    return "", 204
