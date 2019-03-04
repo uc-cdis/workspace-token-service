@@ -53,9 +53,17 @@ def load_settings(app):
     """
     app.secret_key = get_var('SECRET_KEY')
     app.encrytion_key = Fernet(get_var('ENCRYPTION_KEY'))
-    app.config['SQLALCHEMY_DATABASE_URI'] = (
-        get_var('SQLALCHEMY_DATABASE_URI')
-    )
+    if os.environ.get("DB_CREDS_FILE"):
+        with open(os.environ["POSTGRES_CREDS_FILE"], "r") as f:
+            creds = json.load(f)
+            app.config["SQLALCHEMY_DATABASE_URI"] = (
+                "postgresql://{db_username}:{db_password}@{db_host}:5432/{db_database}"
+                .format(**creds)
+            )
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = (
+            get_var('SQLALCHEMY_DATABASE_URI')
+        )
     fence_base_url = get_var('FENCE_BASE_URL')
 
     plugins = get_var('AUTH_PLUGINS', 'default')

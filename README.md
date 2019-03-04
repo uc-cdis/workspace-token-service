@@ -5,7 +5,7 @@ Gen3 workspace token service acts as a OIDC client to acts on behalf of users to
 Each type of workspace environment should have a corresponding auth mechanism for the service to check the identity of a worker.
 Currently has a k8s auth plugin that supports workers deployed as k8s pod with username annotation.
 
-[architecture](https://raw.githubusercontent.com/uc-cdis/workspace-token-service/master/architecture.svg)
+[architecture](architecture.svg)
 
 ## how a workspace interacts with workspace token service
 - workspace UI calls /oauth2/authorization_url to connect with fence during user login, this will do an OIDC dance with fence to obtain refresh_token if it's a new user or the user's previous refresh token is expired.
