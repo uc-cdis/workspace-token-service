@@ -13,6 +13,12 @@ def get_authorization_url():
     """
     Provide a redirect to the authorization endpoint from the OP.
     """
+    redirect = flask.request.args.get('redirect')
+    if not redirect.startswith("/"):
+        raise UserError("only support relative redirect")
+    if redirect:
+        flask.session["redirect"] = redirect
+
     # This will be the value that was put in the ``client_kwargs`` in config.
     redirect_uri = flask.current_app.oauth2_client.session.redirect_uri
     # Get the authorization URL and the random state; save the state to check
@@ -29,7 +35,10 @@ def do_authorize():
     """
     Send a token request to the OP.
     """
+    redirect = flask.session.pop("redirect")
     oauth2.client_do_authorize()
+    if redirect:
+        return flask.redirect(redirect)
     return flask.jsonify({"success": "connected with fence"})
 
 
