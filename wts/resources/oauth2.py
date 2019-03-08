@@ -1,6 +1,7 @@
 from authlib.client.errors import OAuthException
 from authlib.specs.rfc6749.errors import OAuth2Error
 from cdiserrors import AuthError
+from datetime import datetime
 import flask
 from jose import jwt
 
@@ -30,7 +31,8 @@ def client_do_authorize():
 def find_valid_refresh_token(username):
     has_valid = False
     for token in db.session.query(RefreshToken).filter_by(username=username):
-        if datetime.fromtimestamp(token.expires) > datetime.now():
+        flask.current_app.logger.info("find token with exp {}".format(token.expires))
+        if datetime.fromtimestamp(token.expires) < datetime.now():
             flask.current_app.logger.info(
                 "Purging expired token {}".format(token.jti)
             )

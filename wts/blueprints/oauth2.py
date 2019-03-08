@@ -33,7 +33,7 @@ def get_authorization_url():
     Provide a redirect to the authorization endpoint from the OP.
     """
     redirect = flask.request.args.get('redirect')
-    if not redirect.startswith("/"):
+    if redirect and not redirect.startswith("/"):
         raise UserError("only support relative redirect")
     if redirect:
         flask.session["redirect"] = redirect
@@ -54,11 +54,12 @@ def do_authorize():
     """
     Send a token request to the OP.
     """
-    redirect = flask.session.pop("redirect")
     oauth2.client_do_authorize()
-    if redirect:
+    try:
+        redirect = flask.session.pop("redirect")
         return flask.redirect(redirect)
-    return flask.jsonify({"success": "connected with fence"})
+    except KeyError:
+        return flask.jsonify({"success": "connected with fence"})
 
 
 @blueprint.route("/logout", methods=["GET"])
