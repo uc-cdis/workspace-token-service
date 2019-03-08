@@ -24,6 +24,7 @@ psycopg2 = "~=2.7"
 python-jose = "~=3.0"
 kubernetes = "~=6.0"
 pyyaml = "==4.2b1"
+authutils = "*"
 
 [requires]
 python_version = "3.6"
