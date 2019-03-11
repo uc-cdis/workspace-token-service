@@ -5,6 +5,8 @@ verify_ssl = true
 
 [dev-packages]
 codacy-coverage = "*"
+truffleHog = "*"
+PyGithub = "*"
 pytest = ">=3.2.3"
 pytest-cov = ">=2.5.1"
 pytest-flask = ">=0.10.0"

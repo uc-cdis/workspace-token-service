@@ -17,9 +17,7 @@ install:
   - pipenv graph
 
 before_install:
-  - pip install -r thog_secret_requirements.txt
-  - wget https://raw.githubusercontent.com/lookcrabs/TruffleHog_Scripts/master/th_wrapper.py
-  - pipenv run python th_wrapper.py -w truffles.json -c thog_config.json -g file:///${PWD}/ --check
+  - wget https://raw.githubusercontent.com/uc-cdis/thwrapper/master/th_wrapper.py
 
 before_script:
   - psql -c 'create database wts_test;' -U postgres
@@ -27,6 +25,7 @@ before_script:
 # run tests
 script:
   - pipenv run py.test -vv --cov=wts --cov-report xml tests
+  - pipenv run python th_wrapper.py -w truffles.json -c thog_config.json -g file:///${PWD}/ --check
 
 after_script:
   - pipenv run python-codacy-coverage -r coverage.xml

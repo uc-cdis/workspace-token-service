@@ -32,7 +32,7 @@ def get_var(variable, default=None, secret_config={}):
         secret_config.get(variable.lower(), os.environ.get(variable))
         or default
     )
-    if not value:
+    if value is None:
         raise Exception(
             "{} configuration is missing, abort initialization".format(variable)
         )
