@@ -1,6 +1,7 @@
 from authlib.client.errors import OAuthException
 from authlib.specs.rfc6749.errors import OAuth2Error
 from cdiserrors import AuthError
+from datetime import datetime
 import flask
 from jose import jwt
 
@@ -27,6 +28,19 @@ def client_do_authorize():
         raise AuthError(str(e))
 
 
+def find_valid_refresh_token(username):
+    has_valid = False
+    for token in db.session.query(RefreshToken).filter_by(username=username):
+        flask.current_app.logger.info("find token with exp {}".format(token.expires))
+        if datetime.fromtimestamp(token.expires) < datetime.now():
+            flask.current_app.logger.info(
+                "Purging expired token {}".format(token.jti)
+            )
+        else:
+            has_valid = True
+    return has_valid
+
+
 def refresh_refresh_token(tokens):
     """
     store new refresh token in db and purge all old tokens for the user
@@ -45,9 +59,13 @@ def refresh_refresh_token(tokens):
     }
     refresh_token = tokens["refresh_token"]
     id_token = tokens["id_token"]
+    # TODO: verify signature with authutils
     content = jwt.decode(id_token, key=None, options=options)
     userid = content["sub"]
     for old_token in db.session.query(RefreshToken).filter_by(userid=userid):
+        flask.current_app.logger.info(
+            "Refreshing token, purging {}".format(old_token.jti)
+        )
         db.session.delete(old_token)
     if hasattr(flask.current_app, "encryption_key"):
         refresh_token = flask.current_app.encryption_key.encrypt(

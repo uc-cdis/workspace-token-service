@@ -81,6 +81,7 @@ def load_settings(app):
         },
     }
     app.config["OIDC"] = oauth_config
+    app.config["OIDC_ISSUER"] = fence_base_url.strip('/')
     app.config["SESSION_COOKIE_NAME"] = "wts"
     app.config["SESSION_COOKIE_SECURE"] = True
 

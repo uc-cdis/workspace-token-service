@@ -1,11 +1,30 @@
-from cdiserrors import APIError
+from cdiserrors import APIError, UserError, AuthNError, AuthZError
 import flask
 from urllib.parse import urljoin
 from ..resources import oauth2
 from ..auth import login_required
+from authutils.user import current_user
 
 
 blueprint = flask.Blueprint("oauth2", __name__)
+
+
+@blueprint.route("/connected", methods=["GET"])
+def connected():
+    """
+    Check if user is connected and has a valid token
+    """
+    try:
+        user = current_user
+        flask.current_app.logger.info(user)
+        username = user.username
+    except:
+        flask.current_app.logger.exception("fail to get username")
+        raise AuthNError("user is not logged in")
+    if oauth2.find_valid_refresh_token(username):
+        return '', 200
+    else:
+        raise AuthZError("user is not connected with token service or expired")
 
 
 @blueprint.route("/authorization_url", methods=["GET"])
@@ -14,7 +33,7 @@ def get_authorization_url():
     Provide a redirect to the authorization endpoint from the OP.
     """
     redirect = flask.request.args.get('redirect')
-    if not redirect.startswith("/"):
+    if redirect and not redirect.startswith("/"):
         raise UserError("only support relative redirect")
     if redirect:
         flask.session["redirect"] = redirect
@@ -35,11 +54,12 @@ def do_authorize():
     """
     Send a token request to the OP.
     """
-    redirect = flask.session.pop("redirect")
     oauth2.client_do_authorize()
-    if redirect:
+    try:
+        redirect = flask.session.pop("redirect")
         return flask.redirect(redirect)
-    return flask.jsonify({"success": "connected with fence"})
+    except KeyError:
+        return flask.jsonify({"success": "connected with fence"})
 
 
 @blueprint.route("/logout", methods=["GET"])
