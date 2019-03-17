@@ -60,7 +60,8 @@ def refresh_refresh_token(tokens):
     refresh_token = tokens["refresh_token"]
     id_token = tokens["id_token"]
     # TODO: verify signature with authutils
-    content = jwt.decode(id_token, key=None, options=options)
+    id_token = jwt.decode(id_token, key=None, options=options)
+    content = jwt.decode(refresh_token, key=None, options=options)
     userid = content["sub"]
     for old_token in db.session.query(RefreshToken).filter_by(userid=userid):
         flask.current_app.logger.info(
@@ -75,7 +76,7 @@ def refresh_refresh_token(tokens):
     new_token = RefreshToken(
         token=refresh_token,
         userid=userid,
-        username=content["context"]["user"]["name"],
+        username=id_token["context"]["user"]["name"],
         jti=content["jti"],
         expires=content["exp"],
     )
