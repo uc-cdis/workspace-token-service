@@ -10,7 +10,6 @@ ENV appname=wts
 # number of uwsgi worker processes
 ENV UWSGI_CHEAPER 2
 
-ENV WORKON_HOME=/.venv
 
 RUN apk update \
     && apk add postgresql-libs postgresql-dev libffi-dev libressl-dev \
@@ -26,7 +25,7 @@ WORKDIR /$appname
 
 RUN python -m pip install --upgrade pip \
     && pip install pipenv \
-    && pipenv install
+    && pipenv install --system --deploy
 
 RUN mkdir -p /var/www/$appname \
     && mkdir -p /var/www/.cache/Python-Eggs/ \

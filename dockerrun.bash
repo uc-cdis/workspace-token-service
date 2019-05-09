@@ -1,7 +1,6 @@
 #!/bin/bash
 
 cd /$appname
-export VENV=$(pipenv --venv)
 
 cd /var/www/$appname
 
