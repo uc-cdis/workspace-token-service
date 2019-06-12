@@ -2,7 +2,7 @@
 # To check running container: docker exec -it wts /bin/bash
 
 
-FROM quay.io/cdis/python-nginx:1.3.0
+FROM quay.io/cdis/python-nginx:pybase3-1.0.0
 
 
 ENV appname=wts
@@ -19,8 +19,6 @@ RUN apk update \
 COPY . /$appname
 COPY ./deployment/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
 COPY ./deployment/uwsgi/wsgi.py /$appname/wsgi.py
-COPY ./deployment/nginx/nginx.conf /etc/nginx/
-COPY ./deployment/nginx/uwsgi.conf /etc/nginx/conf.d/nginx.conf
 WORKDIR /$appname
 
 RUN python -m pip install --upgrade pip \
@@ -43,4 +41,4 @@ RUN COMMIT=`git rev-parse HEAD` && echo "COMMIT=\"${COMMIT}\"" >$appname/version
 
 WORKDIR /var/www/$appname
 
-CMD /$appname/dockerrun.bash
+CMD /dockerrun.sh
