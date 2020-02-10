@@ -2,23 +2,87 @@ definitions: {}
 info:
   contact:
     email: cdis@uchicago.edu
-  description: A service template for CDIS Gen 3 data commons. Code is available on
-    [GitHub](https://github.com/uc-cdis/template-repo).
+  description: The Gen3 WTS acts as an OIDC client which acts on behalf of users to request refresh tokens from Fence. The code is available on [GitHub](https://github.com/uc-cdis/workspace-token-service).
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://cdis.uchicago.edu/terms/
-  title: Service template OpenAPI Specification
+  title: Workspace Token Service
   version: '1.0'
 paths:
   /_status:
     get:
+      summary: Health check endpoint
+      tags:
+      - system
       responses:
         '200':
           description: Healthy
         default:
           description: Unhealthy
-      summary: Health check endpoint
+  /oauth2/sconnected:
+    get:
+      summary: Check if user is connected and has a valid token
       tags:
-      - system
+      - auth
+      responses:
+        '200':
+          description: OK
+        '403':
+          description: User is not logged in, not connected with WTS or token is expired
+  /oauth2/authorization_url:
+    get:
+      summary: Provide a redirect to the authorization endpoint from the OP
+      tags:
+      - auth
+      parameters:
+      - description: redirect URL (must start with "/" - we only support relative redirect)
+        in: query
+        name: redirect
+        type: string
+      responses:
+        '302':
+          description: Redirect
+        '400':
+          description: User error
+  /oauth2/authorize:
+    get:
+      summary: Send a token request to the OP
+      tags:
+      - auth
+      responses:
+        '200':
+          description: OK
+        '302':
+          description: Redirect
+  /oauth2/logout:
+    get:
+      summary: Log out the user by revoking the refresh token if provided
+      tags:
+      - auth
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Failed to revoke token
+  /token:
+    get:
+      summary: Get an access token
+      tags:
+      - auth
+      parameters:
+      - description: number of seconds
+        in: query
+        name: expires
+        type: integer
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+        '400':
+          description: User error
 swagger: '2.0'
