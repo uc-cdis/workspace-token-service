@@ -20,7 +20,7 @@ paths:
           description: Healthy
         default:
           description: Unhealthy
-  /oauth2/sconnected:
+  /oauth2/connected:
     get:
       summary: Check if user is connected and has a valid token
       tags:
