@@ -33,9 +33,7 @@ def find_valid_refresh_token(username):
     for token in db.session.query(RefreshToken).filter_by(username=username):
         flask.current_app.logger.info("find token with exp {}".format(token.expires))
         if datetime.fromtimestamp(token.expires) < datetime.now():
-            flask.current_app.logger.info(
-                "Purging expired token {}".format(token.jti)
-            )
+            flask.current_app.logger.info("Purging expired token {}".format(token.jti))
         else:
             has_valid = True
     return has_valid
