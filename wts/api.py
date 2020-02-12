@@ -28,10 +28,7 @@ def get_var(variable, default=None, secret_config={}):
     if not secret_config and path:
         with open(path, "r") as f:
             secret_config.update(json.load(f))
-    value = (
-        secret_config.get(variable.lower(), os.environ.get(variable))
-        or default
-    )
+    value = secret_config.get(variable.lower(), os.environ.get(variable)) or default
     if value is None:
         raise Exception(
             "{} configuration is missing, abort initialization".format(variable)
@@ -84,7 +81,7 @@ def load_settings(app):
         },
     }
     app.config["OIDC"] = oauth_config
-    app.config["OIDC_ISSUER"] = fence_base_url.strip('/')
+    app.config["OIDC_ISSUER"] = fence_base_url.strip("/")
     app.config["SESSION_COOKIE_NAME"] = "wts"
     app.config["SESSION_COOKIE_SECURE"] = True
 
@@ -107,6 +104,10 @@ app.register_error_handler(APIError, _log_and_jsonify_exception)
 
 @app.before_first_request
 def setup():
+    _setup(app)
+
+
+def _setup(app):
     load_settings(app)
     app.oauth2_client = OAuthClient(**app.config["OIDC"])
     setup_plugins(app)
@@ -120,14 +121,6 @@ def setup():
 def health_check():
     """
     Health check endpoint
-    ---
-    tags:
-      - system
-    responses:
-        200:
-            description: Healthy
-        default:
-            description: Unhealthy
     """
     try:
         db.session.query(RefreshToken).first()

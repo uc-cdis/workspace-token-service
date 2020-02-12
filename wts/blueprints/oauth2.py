@@ -22,7 +22,7 @@ def connected():
         flask.current_app.logger.exception("fail to get username")
         raise AuthNError("user is not logged in")
     if oauth2.find_valid_refresh_token(username):
-        return '', 200
+        return "", 200
     else:
         raise AuthZError("user is not connected with token service or expired")
 
@@ -32,7 +32,7 @@ def get_authorization_url():
     """
     Provide a redirect to the authorization endpoint from the OP.
     """
-    redirect = flask.request.args.get('redirect')
+    redirect = flask.request.args.get("redirect")
     if redirect and not redirect.startswith("/"):
         raise UserError("only support relative redirect")
     if redirect:
@@ -42,9 +42,10 @@ def get_authorization_url():
     redirect_uri = flask.current_app.oauth2_client.session.redirect_uri
     # Get the authorization URL and the random state; save the state to check
     # later, and return the URL.
-    authorization_url, state = flask.current_app.oauth2_client.generate_authorize_redirect(
-        redirect_uri
-    )
+    (
+        authorization_url,
+        state,
+    ) = flask.current_app.oauth2_client.generate_authorize_redirect(redirect_uri)
     flask.session["state"] = state
     return flask.redirect(authorization_url)
 

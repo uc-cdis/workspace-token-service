@@ -2,6 +2,7 @@ from cryptography.fernet import Fernet
 import pytest
 import os
 from wts.api import app as service_app
+from wts.api import _setup
 
 
 def test_settings():
@@ -22,4 +23,6 @@ def test_settings():
 @pytest.fixture(scope="session")
 def app():
     test_settings()
+    with service_app.app_context():
+        _setup(service_app)
     return service_app
