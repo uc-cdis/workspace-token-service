@@ -1,10 +1,11 @@
+import flask
+import requests
 import time
 
 from cdiserrors import AuthError, InternalError
-import flask
-import requests
 
 from .models import db, RefreshToken
+from .utils import get_oauth_client
 
 
 def get_access_token(expires=None):
@@ -25,7 +26,7 @@ def get_access_token(expires=None):
         token = flask.current_app.encryption_key.decrypt(token)
 
     data = {"grant_type": "refresh_token", "refresh_token": token}
-    client = flask.current_app.oauth2_client
+    client, _ = get_oauth_client()
     auth = (client.client_id, client.client_secret)
     try:
         r = requests.post(client.access_token_url, data=data, auth=auth)

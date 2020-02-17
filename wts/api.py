@@ -1,12 +1,9 @@
-# app.py
-
-import json
-import os
-
 from authlib.client import OAuthClient
+from cryptography.fernet import Fernet
 import flask
 from flask import Flask
-from cryptography.fernet import Fernet
+import json
+import os
 
 from cdislogging import get_logger
 from cdiserrors import APIError
@@ -14,9 +11,11 @@ from cdiserrors import APIError
 from .auth_plugins import setup_plugins
 from .blueprints import oauth2, tokens
 from .models import db, Base, RefreshToken
+from .version_data import VERSION, COMMIT
+
 
 app = Flask(__name__)
-app.logger = get_logger(__name__)
+app.logger = get_logger(__name__, log_level="info")
 
 
 def get_var(variable, default=None, secret_config={}):
@@ -47,6 +46,7 @@ def load_settings(app):
     OIDC_CLIENT_ID: client id for the oidc client for this app
     OIDC_CLIENT_SECRET: client secret for the oidc client for this app
     AUTH_PLUGINS: a list of comma separate plugins, eg: k8s
+    EXTERNAL_OIDC: config for additional oidc handshakes
     """
     app.secret_key = get_var("SECRET_KEY")
     app.encrytion_key = Fernet(get_var("ENCRYPTION_KEY"))
@@ -80,8 +80,23 @@ def load_settings(app):
             "scope": "openid data user",
         },
     }
-    app.config["OIDC"] = oauth_config
-    app.config["OIDC_ISSUER"] = fence_base_url.strip("/")
+    app.config["OIDC"] = {"default": oauth_config}
+
+    for conf in get_var("EXTERNAL_OIDC", []):
+        fence_base_url = get_var("BASE_URL", secret_config=conf) + "/user/"
+        app.config["OIDC"]["id"] = {  # TODO
+            "client_id": get_var("OIDC_CLIENT_ID", secret_config=conf),
+            "client_secret": get_var("OIDC_CLIENT_SECRET", secret_config=conf),
+            "api_base_url": fence_base_url,
+            "authorize_url": fence_base_url + "oauth2/authorize",
+            "access_token_url": fence_base_url + "oauth2/token",
+            "refresh_token_url": fence_base_url + "oauth2/token",
+            "client_kwargs": {
+                "redirect_uri": wts_base_url + "oauth2/authorize",
+                "scope": "openid data user",
+            },
+        }
+
     app.config["SESSION_COOKIE_NAME"] = "wts"
     app.config["SESSION_COOKIE_SECURE"] = True
 
@@ -109,7 +124,10 @@ def setup():
 
 def _setup(app):
     load_settings(app)
-    app.oauth2_client = OAuthClient(**app.config["OIDC"])
+    app.oauth2_clients = {
+        idp: OAuthClient(**conf) for idp, conf in app.config["OIDC"].items()
+    }
+    app.logger.info("Set up OIDC clients: {}".format(list(app.oauth2_clients.keys())))
     setup_plugins(app)
     db.init_app(app)
     Base.metadata.create_all(bind=db.engine)
@@ -127,6 +145,17 @@ def health_check():
         return "Healthy", 200
     except:
         return "Unhealthy", 500
+
+
+@app.route("/_version", methods=["GET"])
+def version():
+    """
+    Return the version of this service.
+    """
+
+    base = {"version": VERSION, "commit": COMMIT}
+
+    return flask.jsonify(base), 200
 
 
 @app.route("/")

@@ -1,6 +1,5 @@
 import flask
 
-
 from ..auth import login_required
 from ..tokens import get_access_token
 

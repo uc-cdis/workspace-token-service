@@ -8,9 +8,20 @@ Each type of workspace environment should have a corresponding auth mechanism fo
 
 OpenAPI Specification [here](http://petstore.swagger.io/?url=https://raw.githubusercontent.com/uc-cdis/workspace-token-service/master/openapi/swagger.yaml).
 
-<img src="docs/architecture.svg">
 
 ## How a workspace interacts with WTS
 
 - The workspace UI calls `/oauth2/authorization_url` to connect with Fence during user login, this will do an OIDC dance with fence to obtain a refresh token if it's a new user or if the user's previous refresh token is expired.
 - The worker calls `/token?expires=seconds` to get an access token
+
+
+## Why isn't WTS part of Fence?
+
+The `/token` endpoint is [dependent on the local Kubernetes](https://github.com/uc-cdis/workspace-token-service/blob/master/wts/auth_plugins/k8s.py). It trusts the caller ([Gen3Fuse](https://github.com/uc-cdis/gen3-fuse)) to pass the correct user identity.
+
+<img src="docs/img/architecture.svg">
+
+
+## Gen3 Workspace architecture
+
+[![](docs/img/Export_to_WS_Architecture_Flow.png)](https://www.lucidchart.com/documents/edit/e844ca6b-fb75-460c-8a8e-5ddb4a17b8d9/0_0)
