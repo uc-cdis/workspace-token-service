@@ -19,7 +19,7 @@ def connected():
     """
 
     # `current_user` valides the token and needs to know the issuer
-    client, _ = get_oauth_client()
+    client, requested_idp = get_oauth_client()
     flask.current_app.config["OIDC_ISSUER"] = client.api_base_url.strip("/")
 
     try:
@@ -29,7 +29,7 @@ def connected():
     except:
         flask.current_app.logger.exception("fail to get username")
         raise AuthNError("user is not logged in")
-    if oauth2.find_valid_refresh_token(username):
+    if oauth2.find_valid_refresh_token(username, requested_idp):
         return "", 200
     else:
         raise AuthZError("user is not connected with token service or expired")

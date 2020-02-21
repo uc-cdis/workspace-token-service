@@ -23,16 +23,18 @@ def client_do_authorize():
         raise AuthError("could not authorize; state did not match across auth requests")
     try:
         tokens = client.fetch_access_token(redirect_uri, **flask.request.args.to_dict())
-        return refresh_refresh_token(tokens)
+        return refresh_refresh_token(tokens, requested_idp)
     except KeyError as e:
         raise AuthError("error in token response: {}".format(tokens))
     except (OAuth2Error, OAuthException) as e:
         raise AuthError(str(e))
 
 
-def find_valid_refresh_token(username):
+def find_valid_refresh_token(username, idp):
     has_valid = False
-    for token in db.session.query(RefreshToken).filter_by(username=username):
+    for token in (
+        db.session.query(RefreshToken).filter_by(username=username).filter_by(idp=idp)
+    ):
         flask.current_app.logger.info("find token with exp {}".format(token.expires))
         if datetime.fromtimestamp(token.expires) < datetime.now():
             flask.current_app.logger.info("Purging expired token {}".format(token.jti))
@@ -41,7 +43,7 @@ def find_valid_refresh_token(username):
     return has_valid
 
 
-def refresh_refresh_token(tokens):
+def refresh_refresh_token(tokens, idp):
     """
     store new refresh token in db and purge all old tokens for the user
     """
@@ -63,7 +65,9 @@ def refresh_refresh_token(tokens):
     id_token = jwt.decode(id_token, key=None, options=options)
     content = jwt.decode(refresh_token, key=None, options=options)
     userid = content["sub"]
-    for old_token in db.session.query(RefreshToken).filter_by(userid=userid):
+    for old_token in (
+        db.session.query(RefreshToken).filter_by(userid=userid).filter_by(idp=idp)
+    ):
         flask.current_app.logger.info(
             "Refreshing token, purging {}".format(old_token.jti)
         )
@@ -79,6 +83,7 @@ def refresh_refresh_token(tokens):
         username=id_token["context"]["user"]["name"],
         jti=content["jti"],
         expires=content["exp"],
+        idp=idp,
     )
     db.session.add(new_token)
     db.session.commit()

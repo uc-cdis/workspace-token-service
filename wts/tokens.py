@@ -9,10 +9,13 @@ from .utils import get_oauth_client
 
 
 def get_access_token(expires=None):
+    client, requested_idp = get_oauth_client()
+
     now = int(time.time())
     refresh_token = (
         db.session.query(RefreshToken)
         .filter_by(username=flask.g.user.username)
+        .filter_by(idp=requested_idp)
         .order_by(RefreshToken.expires.desc())
         .first()
     )
@@ -26,7 +29,6 @@ def get_access_token(expires=None):
         token = flask.current_app.encryption_key.decrypt(token)
 
     data = {"grant_type": "refresh_token", "refresh_token": token}
-    client, _ = get_oauth_client()
     auth = (client.client_id, client.client_secret)
     try:
         r = requests.post(client.access_token_url, data=data, auth=auth)
