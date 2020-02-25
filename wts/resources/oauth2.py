@@ -12,7 +12,7 @@ from ..utils import get_oauth_client
 
 def client_do_authorize():
     requested_idp = flask.session.get("idp", "default")
-    client, _ = get_oauth_client(requested_idp)
+    client, _ = get_oauth_client(idp=requested_idp)
     redirect_uri = client.session.redirect_uri
     mismatched_state = (
         "state" not in flask.request.args

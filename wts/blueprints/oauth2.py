@@ -18,7 +18,7 @@ def connected():
     Check if user is connected and has a valid token
     """
 
-    # `current_user` valides the token and needs to know the issuer
+    # `current_user` validates the token and needs to know the issuer
     client, requested_idp = get_oauth_client()
     flask.current_app.config["OIDC_ISSUER"] = client.api_base_url.strip("/")
 
