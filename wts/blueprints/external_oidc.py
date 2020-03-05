@@ -13,9 +13,10 @@ blueprint = flask.Blueprint("external_oidc", __name__)
 
 blueprint.route("")
 
-cache = SimpleCache()
+external_oidc_cache = {}
 
 
+# this is called every 10 sec by the Gen3Fuse sidecar
 @blueprint.route("/", methods=["GET"])
 def get_external_oidc():
     # we use the "providers" field and make "urls" a list to match the format
@@ -23,8 +24,8 @@ def get_external_oidc():
     # complex "login options" logic in the future (automatically get the
     # available login options for each IDP, which could include dropdowns).
 
-    global cache
-    if not cache.has("external_oidc"):
+    global external_oidc_cache
+    if not external_oidc_cache:
         data = {
             "providers": [
                 {
@@ -46,7 +47,7 @@ def get_external_oidc():
                 for idp, idp_conf in oidc_conf.get("login_options", {}).items()
             ]
         }
-        cache.add("external_oidc", data)
+        external_oidc_cache = data
 
     # get the username of the current logged in user
     client, _ = get_oauth_client(idp="default")
@@ -60,12 +61,15 @@ def get_external_oidc():
             "no logged in user: will return is_connected=False for all IDPs"
         )
 
-    data = cache.get("external_oidc")
-    for p in data["providers"]:
+    # get all expirations at once (1 DB query)
+    idp_to_token_exp = get_refresh_token_expirations(
+        username, [p["idp"] for p in external_oidc_cache["providers"]]
+    )
+    for p in external_oidc_cache["providers"]:
         # whether the current user is logged in with this IDP
-        p["refresh_token_expiration"] = get_refresh_token_expiration(username, p["idp"])
+        p["refresh_token_expiration"] = idp_to_token_exp[p["idp"]]
 
-    return flask.jsonify(data), 200
+    return flask.jsonify(external_oidc_cache), 200
 
 
 def generate_authorization_url(idp):
@@ -82,15 +86,22 @@ def generate_authorization_url(idp):
     return authorization_url
 
 
-def get_refresh_token_expiration(username, idp):
+def get_refresh_token_expirations(username, idps):
+    """
+    Returns:
+        dict: IDP to expiration of the most recent refresh token, or None if it's expired.
+    """
     now = int(time.time())
-    refresh_token = (
+    refresh_tokens = (
         db.session.query(RefreshToken)
         .filter_by(username=username)
-        .filter_by(idp=idp)
-        .order_by(RefreshToken.expires.desc())
-        .first()
+        .filter(RefreshToken.idp.in_(idps))
+        .order_by(RefreshToken.expires.asc())
     )
-    if not refresh_token or refresh_token.expires <= now:
-        return None
-    return refresh_token.expires
+    if not refresh_tokens:
+        return {}
+    # the tokens are ordered by oldest to most recent, because we only want
+    # to return None if the most recent token is expired
+    expirations = {idp: None for idp in idps}
+    expirations.update({t.idp: t.expires for t in refresh_tokens if t.expires > now})
+    return expirations

@@ -4,6 +4,7 @@ from datetime import datetime
 import flask
 from jose import jwt
 
+from authutils.user import current_user
 from cdiserrors import AuthError
 
 from ..models import RefreshToken, db
@@ -77,10 +78,17 @@ def refresh_refresh_token(tokens, idp):
             bytes(refresh_token, encoding="utf8")
         )
 
+    user = current_user
+    username = user.username
+    flask.current_app.logger.info(
+        'Linking username "{}" for IDP "{}" to current user "{}"'.format(
+            id_token["context"]["user"]["name"], idp, username
+        )
+    )
     new_token = RefreshToken(
         token=refresh_token,
         userid=userid,
-        username=id_token["context"]["user"]["name"],
+        username=username,
         jti=content["jti"],
         expires=content["exp"],
         idp=idp,
