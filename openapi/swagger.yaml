@@ -115,6 +115,13 @@ paths:
         token, or if it's already expired)
       tags:
       - auth
+      parameters:
+      - name: unexpired
+        in: query
+        type: boolean
+        description: Only return IDPs for which the currently logged in user has a valid refresh token.
+        required: false
+        default: 'false'
       responses:
         '200':
           description: OK

@@ -19,10 +19,21 @@ external_oidc_cache = {}
 # this is called every 10 sec by the Gen3Fuse sidecar
 @blueprint.route("/", methods=["GET"])
 def get_external_oidc():
-    # we use the "providers" field and make "urls" a list to match the format
-    # of the Fence "/login" endpoint, and so that we can implement a more
-    # complex "login options" logic in the future (automatically get the
-    # available login options for each IDP, which could include dropdowns).
+    """
+    List the configured identity providers and their configuration
+    details, including the timestamp at which the refresh token for the
+    currently logged in user will expire (or "null" if there is no refresh
+    token, or if it's already expired). If "unexpired=true" is used, will
+    only return IDPs for which the currently logged in user has a valid
+    refresh token.
+
+    We use the "providers" field and make "urls" a list to match the format
+    of the Fence "/login" endpoint, and so that we can implement a more
+    complex "login options" logic in the future (automatically get the
+    available login options for each IDP, which could include dropdowns).
+    """
+
+    unexpired_only = flask.request.args.get("unexpired", "false").lower() == "true"
 
     global external_oidc_cache
     if not external_oidc_cache:
@@ -65,11 +76,16 @@ def get_external_oidc():
     idp_to_token_exp = get_refresh_token_expirations(
         username, [p["idp"] for p in external_oidc_cache["providers"]]
     )
-    for p in external_oidc_cache["providers"]:
-        # whether the current user is logged in with this IDP
-        p["refresh_token_expiration"] = idp_to_token_exp[p["idp"]]
 
-    return flask.jsonify(external_oidc_cache), 200
+    result = {"providers": []}
+    for p in external_oidc_cache["providers"]:
+        # expiration of the current user's refresh token
+        exp = idp_to_token_exp[p["idp"]]
+        if exp or not unexpired_only:
+            p["refresh_token_expiration"] = exp
+            result["providers"].append(p)
+
+    return flask.jsonify(result), 200
 
 
 def generate_authorization_url(idp):
