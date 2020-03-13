@@ -23,7 +23,8 @@ WORKDIR /$appname
 
 RUN python -m pip install --upgrade pip \
     && pip install pipenv \
-    && pipenv install --system --deploy
+    && pipenv install --system --deploy \
+    && pip freeze
 
 RUN mkdir -p /var/www/$appname \
     && mkdir -p /var/www/.cache/Python-Eggs/ \

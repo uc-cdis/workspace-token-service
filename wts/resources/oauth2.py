@@ -1,5 +1,4 @@
-from authlib.client.errors import OAuthException
-from authlib.specs.rfc6749.errors import OAuth2Error
+from authlib.common.errors import AuthlibBaseError
 from datetime import datetime
 import flask
 from jose import jwt
@@ -14,7 +13,7 @@ from ..utils import get_oauth_client
 def client_do_authorize():
     requested_idp = flask.session.get("idp", "default")
     client, _ = get_oauth_client(idp=requested_idp)
-    redirect_uri = client.session.redirect_uri
+    redirect_uri = client.client_kwargs.get("redirect_uri")
     mismatched_state = (
         "state" not in flask.request.args
         or "state" not in flask.session
@@ -27,7 +26,7 @@ def client_do_authorize():
         return refresh_refresh_token(tokens, requested_idp)
     except KeyError as e:
         raise AuthError("error in token response: {}".format(tokens))
-    except (OAuth2Error, OAuthException) as e:
+    except AuthlibBaseError as e:
         raise AuthError(str(e))
 
 
@@ -78,8 +77,14 @@ def refresh_refresh_token(tokens, idp):
             bytes(refresh_token, encoding="utf8")
         )
 
+    # get the username of the current logged in user.
+    # `current_user` validates the token and relies on `OIDC_ISSUER`
+    # to know the issuer
+    client, _ = get_oauth_client(idp="default")
+    flask.current_app.config["OIDC_ISSUER"] = client.api_base_url.strip("/")
     user = current_user
     username = user.username
+
     flask.current_app.logger.info(
         'Linking username "{}" for IDP "{}" to current user "{}"'.format(
             id_token["context"]["user"]["name"], idp, username

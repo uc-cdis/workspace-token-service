@@ -60,7 +60,9 @@ def get_external_oidc():
         }
         external_oidc_cache = data
 
-    # get the username of the current logged in user
+    # get the username of the current logged in user.
+    # `current_user` validates the token and relies on `OIDC_ISSUER`
+    # to know the issuer
     client, _ = get_oauth_client(idp="default")
     flask.current_app.config["OIDC_ISSUER"] = client.api_base_url.strip("/")
     username = None
