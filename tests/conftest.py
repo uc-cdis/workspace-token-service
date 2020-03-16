@@ -11,7 +11,7 @@ def test_settings():
         "OIDC_CLIENT_ID": "test",
         "OIDC_CLIENT_SECRET": "test",
         "SECRET_KEY": "test",
-        "SQLALCHEMY_DATABASE_URI": "postgresql://postgres:postgres@localhost:5432/wts_test",
+        "POSTGRES_CREDS_FILE": "tests/postgres_creds.json",
         "WTS_BASE_URL": "/",
         "ENCRYPTION_KEY": Fernet.generate_key().decode("utf-8"),
     }

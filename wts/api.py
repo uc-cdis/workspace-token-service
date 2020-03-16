@@ -24,7 +24,10 @@ def load_settings(app):
     load setttings from environment variables
     SECRET_KEY: app secret key to encrypt session cookies
     ENCRYPTION_KEY: encryption key to encrypt credentials in database
-    SQLALCHEMY_DATABASE_URI: database connection uri
+    POSTGRES_CREDS_FILE: JSON file with "db_username", "db_password",
+        "db_host" and "db_database" keys
+    SQLALCHEMY_DATABASE_URI: database connection uri. Overriden by
+        POSTGRES_CREDS_FILE
     FENCE_BASE_URL: fence base url, eg: https://gen3_commons/user
     WTS_BASE_URL: base url for this workspace token service
     OIDC_CLIENT_ID: client id for the oidc client for this app
