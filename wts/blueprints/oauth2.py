@@ -4,7 +4,6 @@ from urllib.parse import urljoin
 from authutils.user import current_user
 from cdiserrors import APIError, UserError, AuthNError, AuthZError
 
-from ..auth import login_required
 from ..resources import oauth2
 from ..utils import get_oauth_client
 
@@ -27,7 +26,7 @@ def connected():
         user = current_user
         flask.current_app.logger.info(user)
         username = user.username
-    except:
+    except Exception:
         flask.current_app.logger.exception("fail to get username")
         raise AuthNError("user is not logged in")
     if oauth2.find_valid_refresh_token(username, requested_idp):

@@ -1,10 +1,8 @@
 import flask
 import time
-from werkzeug.contrib.cache import SimpleCache
 
 from authutils.user import current_user
 
-from ..auth import login_required
 from ..models import db, RefreshToken
 from ..utils import get_config_var, get_oauth_client
 
@@ -69,7 +67,7 @@ def get_external_oidc():
     try:
         user = current_user
         username = user.username
-    except:
+    except Exception:
         flask.current_app.logger.info(
             "no logged in user: will return is_connected=False for all IDPs"
         )
