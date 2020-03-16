@@ -110,7 +110,7 @@ paths:
       summary: List the configured identity providers
       description: >
         List the configured identity providers and their configuration
-        details, including the timestamp at which the refresh token for the
+        details, including in how long the refresh token for the
         currently logged in user will expire (or "null" if there is no refresh
         token, or if it's already expired)
       tags:

@@ -104,6 +104,21 @@ def generate_authorization_url(idp):
     return authorization_url
 
 
+def seconds_to_human_time(seconds):
+    if seconds < 0:
+        return None
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+    d, h = divmod(h, 24)
+    if d:
+        return "{} days".format(d)
+    if h:
+        return "{} hours".format(h)
+    if m:
+        return "{} minutes".format(m)
+    return "{} seconds".format(s)
+
+
 def get_refresh_token_expirations(username, idps):
     """
     Returns:
@@ -121,5 +136,11 @@ def get_refresh_token_expirations(username, idps):
     # the tokens are ordered by oldest to most recent, because we only want
     # to return None if the most recent token is expired
     expirations = {idp: None for idp in idps}
-    expirations.update({t.idp: t.expires for t in refresh_tokens if t.expires > now})
+    expirations.update(
+        {
+            t.idp: seconds_to_human_time(t.expires - now)
+            for t in refresh_tokens
+            if t.expires > now
+        }
+    )
     return expirations
