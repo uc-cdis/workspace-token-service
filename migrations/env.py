@@ -40,8 +40,12 @@ if postgres_creds:
             print("Postgres creds misconfiguration: {}".format(e))
             exit(1)
 else:
-    print("Cannot find postgres creds location")
-    exit(1)
+    url = get_config_var("SQLALCHEMY_DATABASE_URI")
+    if url:
+        config.set_main_option("sqlalchemy.url", url)
+    else:
+        print("Cannot find postgres creds location")
+        exit(1)
 
 
 def run_migrations_offline():

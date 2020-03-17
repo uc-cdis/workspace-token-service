@@ -1,6 +1,0 @@
-{
-    "db_host": "localhost",
-    "db_username": "postgres",
-    "db_password": "postgres",
-    "db_database": "wts_test"
-}
