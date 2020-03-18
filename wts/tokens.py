@@ -9,7 +9,8 @@ from .utils import get_oauth_client
 
 
 def get_access_token(expires=None):
-    client, requested_idp = get_oauth_client()
+    requested_idp = flask.request.args.get("idp")
+    client = get_oauth_client(idp=requested_idp)
 
     now = int(time.time())
     refresh_token = (

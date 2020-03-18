@@ -61,7 +61,7 @@ def get_external_oidc():
     # get the username of the current logged in user.
     # `current_user` validates the token and relies on `OIDC_ISSUER`
     # to know the issuer
-    client, _ = get_oauth_client(idp="default")
+    client = get_oauth_client(idp="default")
     flask.current_app.config["OIDC_ISSUER"] = client.api_base_url.strip("/")
     username = None
     try:
@@ -69,7 +69,7 @@ def get_external_oidc():
         username = user.username
     except Exception:
         flask.current_app.logger.info(
-            "no logged in user: will return is_connected=False for all IDPs"
+            "no logged in user: will return refresh_token_expiration=None for all IDPs"
         )
 
     # get all expirations at once (1 DB query)

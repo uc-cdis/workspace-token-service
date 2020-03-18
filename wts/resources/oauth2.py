@@ -12,7 +12,7 @@ from ..utils import get_oauth_client
 
 def client_do_authorize():
     requested_idp = flask.session.get("idp", "default")
-    client, _ = get_oauth_client(idp=requested_idp)
+    client = get_oauth_client(idp=requested_idp)
     redirect_uri = client.client_kwargs.get("redirect_uri")
     mismatched_state = (
         "state" not in flask.request.args
@@ -80,7 +80,7 @@ def refresh_refresh_token(tokens, idp):
     # get the username of the current logged in user.
     # `current_user` validates the token and relies on `OIDC_ISSUER`
     # to know the issuer
-    client, _ = get_oauth_client(idp="default")
+    client = get_oauth_client(idp="default")
     flask.current_app.config["OIDC_ISSUER"] = client.api_base_url.strip("/")
     user = current_user
     username = user.username

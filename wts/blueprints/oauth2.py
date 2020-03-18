@@ -16,10 +16,11 @@ def connected():
     """
     Check if user is connected and has a valid token
     """
+    requested_idp = flask.request.args.get("idp")
 
     # `current_user` validates the token and relies on `OIDC_ISSUER`
     # to know the issuer
-    client, requested_idp = get_oauth_client()
+    client = get_oauth_client(idp=requested_idp)
     flask.current_app.config["OIDC_ISSUER"] = client.api_base_url.strip("/")
 
     try:
@@ -46,8 +47,9 @@ def get_authorization_url():
     if redirect:
         flask.session["redirect"] = redirect
 
+    requested_idp = flask.request.args.get("idp")
+    client = get_oauth_client(idp=requested_idp)
     # This will be the value that was put in the ``client_kwargs`` in config.
-    client, requested_idp = get_oauth_client()
     redirect_uri = client.client_kwargs.get("redirect_uri")
     # Get the authorization URL and the random state; save the state to check
     # later, and return the URL.
@@ -82,7 +84,7 @@ def logout_oauth():
     """
     url = urljoin(flask.current_app.config.get("USER_API"), "/oauth2/revoke")
     token = flask.request.form.get("token")
-    client, _ = get_oauth_client()
+    client = get_oauth_client(idp="default")
 
     try:
         client.session.revoke_token(url, token)
