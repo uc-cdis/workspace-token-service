@@ -16,7 +16,7 @@ def connected():
     """
     Check if user is connected and has a valid token
     """
-    requested_idp = flask.request.args.get("idp")
+    requested_idp = flask.request.args.get("idp", "default")
 
     # `current_user` validates the token and relies on `OIDC_ISSUER`
     # to know the issuer
@@ -47,7 +47,7 @@ def get_authorization_url():
     if redirect:
         flask.session["redirect"] = redirect
 
-    requested_idp = flask.request.args.get("idp")
+    requested_idp = flask.request.args.get("idp", "default")
     client = get_oauth_client(idp=requested_idp)
     # This will be the value that was put in the ``client_kwargs`` in config.
     redirect_uri = client.client_kwargs.get("redirect_uri")

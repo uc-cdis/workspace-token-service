@@ -48,7 +48,8 @@ def load_settings(app):
             )
     else:
         app.config["SQLALCHEMY_DATABASE_URI"] = get_var("SQLALCHEMY_DATABASE_URI")
-    fence_base_url = get_var("FENCE_BASE_URL")
+    url = get_var("FENCE_BASE_URL")
+    fence_base_url = url if url.endswith("/") else (url + "/")
 
     plugins = get_var("AUTH_PLUGINS", "default")
     plugins = set(plugins.split(","))
@@ -70,7 +71,8 @@ def load_settings(app):
     app.config["OIDC"] = {"default": oauth_config}
 
     for conf in get_var("EXTERNAL_OIDC", []):
-        fence_base_url = get_var("BASE_URL", secret_config=conf) + "/user/"
+        url = get_var("BASE_URL", secret_config=conf)
+        fence_base_url = (url if url.endswith("/") else (url + "/")) + "user/"
         for idp, idp_conf in conf.get("login_options", {}).items():
             authorization_url = fence_base_url + "oauth2/authorize"
             authorization_url = add_params_to_uri(
