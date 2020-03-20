@@ -25,6 +25,13 @@ paths:
       summary: Check if user is connected and has a valid token
       tags:
       - auth
+      parameters:
+      - name: idp
+        type: string
+        in: query
+        description: unique ID of a configured IDP
+        required: false
+        default: 'default'
       responses:
         '200':
           description: OK
@@ -40,6 +47,12 @@ paths:
         in: query
         name: redirect
         type: string
+      - name: idp
+        type: string
+        in: query
+        description: unique ID of a configured IDP
+        required: false
+        default: 'default'
       responses:
         '302':
           description: Redirect
@@ -48,6 +61,7 @@ paths:
   /oauth2/authorize:
     get:
       summary: Send a token request to the OP
+      description: Will use the session-stored IDP parameter
       tags:
       - auth
       responses:
@@ -75,6 +89,12 @@ paths:
         in: query
         name: expires
         type: integer
+      - name: idp
+        type: string
+        in: query
+        description: unique ID of a configured IDP
+        required: false
+        default: 'default'
       responses:
         '200':
           description: OK
@@ -85,4 +105,49 @@ paths:
                 type: string
         '400':
           description: User error
+  /external_oidc:
+    get:
+      summary: List the configured identity providers
+      description: >
+        List the configured identity providers and their configuration
+        details, including in how long the refresh token for the
+        currently logged in user will expire (or "null" if there is no refresh
+        token, or if it's already expired)
+      tags:
+      - auth
+      parameters:
+      - name: unexpired
+        in: query
+        type: boolean
+        description: Only return IDPs for which the currently logged in user has a valid refresh token.
+        required: false
+        default: 'false'
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              providers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    base_url:
+                      type: string
+                    idp:
+                      type: string
+                    name:
+                      type: string
+                    refresh_token_expiration:
+                      type: string
+                    urls:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          url:
+                            type: string
 swagger: '2.0'

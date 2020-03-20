@@ -1,9 +1,11 @@
-from cdiserrors import APIError, UserError, AuthNError, AuthZError
 import flask
 from urllib.parse import urljoin
-from ..resources import oauth2
-from ..auth import login_required
+
 from authutils.user import current_user
+from cdiserrors import APIError, UserError, AuthNError, AuthZError
+
+from ..resources import oauth2
+from ..utils import get_oauth_client
 
 
 blueprint = flask.Blueprint("oauth2", __name__)
@@ -14,14 +16,21 @@ def connected():
     """
     Check if user is connected and has a valid token
     """
+    requested_idp = flask.request.args.get("idp", "default")
+
+    # `current_user` validates the token and relies on `OIDC_ISSUER`
+    # to know the issuer
+    client = get_oauth_client(idp=requested_idp)
+    flask.current_app.config["OIDC_ISSUER"] = client.api_base_url.strip("/")
+
     try:
         user = current_user
         flask.current_app.logger.info(user)
         username = user.username
-    except:
+    except Exception:
         flask.current_app.logger.exception("fail to get username")
         raise AuthNError("user is not logged in")
-    if oauth2.find_valid_refresh_token(username):
+    if oauth2.find_valid_refresh_token(username, requested_idp):
         return "", 200
     else:
         raise AuthZError("user is not connected with token service or expired")
@@ -38,15 +47,15 @@ def get_authorization_url():
     if redirect:
         flask.session["redirect"] = redirect
 
+    requested_idp = flask.request.args.get("idp", "default")
+    client = get_oauth_client(idp=requested_idp)
     # This will be the value that was put in the ``client_kwargs`` in config.
-    redirect_uri = flask.current_app.oauth2_client.session.redirect_uri
+    redirect_uri = client.client_kwargs.get("redirect_uri")
     # Get the authorization URL and the random state; save the state to check
     # later, and return the URL.
-    (
-        authorization_url,
-        state,
-    ) = flask.current_app.oauth2_client.generate_authorize_redirect(redirect_uri)
+    (authorization_url, state) = client.generate_authorize_redirect(redirect_uri)
     flask.session["state"] = state
+    flask.session["idp"] = requested_idp
     return flask.redirect(authorization_url)
 
 
@@ -68,11 +77,17 @@ def logout_oauth():
     """
     Log out the user.
     To accomplish this, just revoke the refresh token if provided.
+
+    NOTE: this endpoint doesn't handle the "idp" parameter for now. If we want
+    to allow logging out, we'll have to revoke the token associated with the
+    specified IDP.
     """
     url = urljoin(flask.current_app.config.get("USER_API"), "/oauth2/revoke")
     token = flask.request.form.get("token")
+    client = get_oauth_client(idp="default")
+
     try:
-        flask.current_app.oauth2_client.session.revoke_token(url, token)
+        client.session.revoke_token(url, token)
     except APIError as e:
         msg = "could not log out, failed to revoke token: {}".format(e.message)
         return msg, 400

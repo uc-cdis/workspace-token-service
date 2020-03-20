@@ -1,0 +1,22 @@
+{
+    "fence_base_url": "localhost",
+    "oidc_client_id": "test",
+    "oidc_client_secret": "test",
+    "secret_key": "test",
+    "sqlalchemy_database_uri": "postgresql://postgres:postgres@localhost:5432/wts_test",
+    "wts_base_url": "/",
+    "external_oidc": [
+        {
+            "base_url": "localhost",
+            "oidc_client_id": "test2",
+            "oidc_client_secret": "test2",
+            "login_options": {
+                "idp_a": {"name": "IDP A", "params": {"idp": "google"}},
+                "idp_b": {
+                    "name": "IDP B",
+                    "params": {"idp": "fence", "fence_idp": "shibboleth"}
+                }
+            }
+        }
+    ]
+}

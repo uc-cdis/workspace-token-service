@@ -16,3 +16,4 @@ class RefreshToken(Base):
     username = Column(String)
     userid = Column(String)
     expires = Column(BigInteger)
+    idp = Column(String)
