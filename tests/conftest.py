@@ -42,15 +42,11 @@ def app():
 
 def setup_test_database():
     """
-    When running tests locally, we need to update the existing DB to
-    the latest version.
-    But in automated tests, a new DB is created from the latest models
-    so there is no need to migrate (and alembic fails when trying).
+    Update the test DB to the latest version. The migration code is able to
+    handle both updating an existing, pre-migration code DB (local tests)
+    and creating a new DB (automated tests)
     """
-    try:
-        alembic_main(["--raiseerr", "upgrade", "head"])
-    except SQLAlchemyError as e:
-        print("Skipping test DB migration: {}".format(e))
+    alembic_main(["--raiseerr", "upgrade", "head"])
 
 
 @pytest.fixture(scope="function")
