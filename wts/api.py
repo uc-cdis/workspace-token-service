@@ -124,7 +124,6 @@ def _setup(app):
     app.logger.info("Set up OIDC clients: {}".format(list(app.oauth2_clients.keys())))
     setup_plugins(app)
     db.init_app(app)
-    Base.metadata.create_all(bind=db.engine)
     app.register_blueprint(oauth2.blueprint, url_prefix="/oauth2")
     app.register_blueprint(tokens.blueprint, url_prefix="/token")
     app.register_blueprint(external_oidc.blueprint, url_prefix="/external_oidc")
