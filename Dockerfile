@@ -22,7 +22,8 @@ COPY ./deployment/uwsgi/wsgi.py /$appname/wsgi.py
 WORKDIR /$appname
 
 RUN python -m pip install --upgrade pip \
-    && pip install pipenv \
+    && pip install --user pipenv \
+    && pip install --user --upgrade pipenv \
     && pipenv install --system --deploy \
     && pip freeze
 
