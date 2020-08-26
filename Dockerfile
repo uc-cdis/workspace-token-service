@@ -2,7 +2,7 @@
 # To check running container: docker exec -it wts /bin/bash
 
 
-FROM quay.io/cdis/python-nginx:pybase3-1.0.0
+FROM quay.io/cdis/python-nginx:pybase3-1.1.0
 
 
 ENV appname=wts
@@ -34,6 +34,10 @@ RUN mkdir -p /var/www/$appname \
     && ln -sf /dev/stderr /var/log/nginx/error.log \
     && chown nginx -R /var/www/.cache/Python-Eggs/ \
     && chown nginx /var/www/$appname
+
+# py https wants to access $HOME/.netrc -
+# there is nothing secret in /root
+RUN touch /root/.netrc && chmod -R a+rX /root
 
 EXPOSE 80
 
