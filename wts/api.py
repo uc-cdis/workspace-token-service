@@ -1,10 +1,10 @@
-from authlib.client import OAuthClient
+from authlib.integrations.requests_client.oauth2_session import OAuth2Session
 from authlib.common.urls import add_params_to_uri
 from cryptography.fernet import Fernet
 import flask
 from flask import Flask
 import json
-
+from urllib.parse import urlparse
 from cdislogging import get_logger
 from cdiserrors import APIError
 
@@ -56,23 +56,31 @@ def load_settings(app):
     app.config["AUTH_PLUGINS"] = plugins
 
     wts_base_url = get_var("WTS_BASE_URL")
+    if not wts_base_url.endswith("/"):
+        wts_base_url = wts_base_url + "/"
+    wts_hostname = urlparse(wts_base_url).netloc.split(".")[0]
     oauth_config = {
         "client_id": get_var("OIDC_CLIENT_ID"),
         "client_secret": get_var("OIDC_CLIENT_SECRET"),
         "api_base_url": fence_base_url,
         "authorize_url": fence_base_url + "oauth2/authorize",
         "access_token_url": fence_base_url + "oauth2/token",
-        "refresh_token_url": fence_base_url + "oauth2/token",
-        "client_kwargs": {
-            "redirect_uri": wts_base_url + "oauth2/authorize",
-            "scope": "openid data user",
-        },
+        "redirect_uri": wts_base_url + "oauth2/authorize",
+        "scope": "openid data user",
+        "state_prefix": "",
     }
     app.config["OIDC"] = {"default": oauth_config}
 
     for conf in get_var("EXTERNAL_OIDC", []):
         url = get_var("BASE_URL", secret_config=conf)
         fence_base_url = (url if url.endswith("/") else (url + "/")) + "user/"
+        # can redirect authorize callbacks to a shared central authorizer
+        redirect_uri = get_var("REDIRECT_URI", default="", secret_config=conf)
+        state_prefix = wts_hostname or ""
+        if not redirect_uri:
+            redirect_uri = wts_base_url + "oauth2/authorize"
+            state_prefix = ""
+
         for idp, idp_conf in conf.get("login_options", {}).items():
             authorization_url = fence_base_url + "oauth2/authorize"
             authorization_url = add_params_to_uri(
@@ -84,15 +92,14 @@ def load_settings(app):
                 "api_base_url": fence_base_url,
                 "authorize_url": authorization_url,
                 "access_token_url": fence_base_url + "oauth2/token",
-                "refresh_token_url": fence_base_url + "oauth2/token",
-                "client_kwargs": {
-                    "redirect_uri": wts_base_url + "oauth2/authorize",
-                    "scope": "openid data user",
-                },
+                "redirect_uri": redirect_uri,
+                "scope": "openid data user",
+                "state_prefix": state_prefix,
             }
 
     app.config["SESSION_COOKIE_NAME"] = "wts"
     app.config["SESSION_COOKIE_SECURE"] = True
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 
 def _log_and_jsonify_exception(e):
@@ -119,7 +126,7 @@ def setup():
 def _setup(app):
     load_settings(app)
     app.oauth2_clients = {
-        idp: OAuthClient(**conf) for idp, conf in app.config["OIDC"].items()
+        idp: OAuth2Session(**conf) for idp, conf in app.config["OIDC"].items()
     }
     app.logger.info("Set up OIDC clients: {}".format(list(app.oauth2_clients.keys())))
     setup_plugins(app)

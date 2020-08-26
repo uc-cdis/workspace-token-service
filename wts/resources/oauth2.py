@@ -13,7 +13,7 @@ from ..utils import get_oauth_client
 def client_do_authorize():
     requested_idp = flask.session.get("idp", "default")
     client = get_oauth_client(idp=requested_idp)
-    redirect_uri = client.client_kwargs.get("redirect_uri")
+    token_url = client.metadata["access_token_url"]
     mismatched_state = (
         "state" not in flask.request.args
         or "state" not in flask.session
@@ -22,7 +22,7 @@ def client_do_authorize():
     if mismatched_state:
         raise AuthError("could not authorize; state did not match across auth requests")
     try:
-        tokens = client.fetch_access_token(redirect_uri, **flask.request.args.to_dict())
+        tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
         return refresh_refresh_token(tokens, requested_idp)
     except KeyError as e:
         raise AuthError("error in token response: {}".format(tokens))
@@ -81,7 +81,7 @@ def refresh_refresh_token(tokens, idp):
     # `current_user` validates the token and relies on `OIDC_ISSUER`
     # to know the issuer
     client = get_oauth_client(idp="default")
-    flask.current_app.config["OIDC_ISSUER"] = client.api_base_url.strip("/")
+    flask.current_app.config["OIDC_ISSUER"] = client.metadata["api_base_url"].strip("/")
     user = current_user
     username = user.username
 

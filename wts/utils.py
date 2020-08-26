@@ -25,10 +25,10 @@ def get_oauth_client(idp=None):
     Args:
         idp (str, optional): IDP for the OAuthClient to return. Usually
             the IDP argument of the current flask request. If not provided,
-            will return the default OAuthClient.
+            will return the default OAuth2Session.
 
     Returns:
-        (OAuthClient, str) tuple
+        (OAuth2Session, str) tuple
     """
     idp = idp or "default"
     try:

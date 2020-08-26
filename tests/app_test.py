@@ -139,7 +139,7 @@ def test_authorize_endpoint(client, test_user, db_session, auth_header):
         {"refresh_token": fake_tokens["idp_a"], "id_token": "eyJhbGciOiJ"},
     ]
     patched_fetch_access_token = mock.patch(
-        "authlib.client.OAuthClient.fetch_access_token", mocked_response
+        "authlib.oauth2.client.OAuth2Client.fetch_token", mocked_response
     )
     patched_fetch_access_token.start()
 
@@ -187,6 +187,12 @@ def test_authorize_endpoint(client, test_user, db_session, auth_header):
             assert t.token == fake_tokens["idp_a"]
 
 
+def test_authorization_url_endpoint(client):
+    res = client.get("/oauth2/authorization_url?idp=idp_a")
+    assert res.status_code == 302
+    assert res.location.startswith("https://some.data.commons/user/oauth2/authorize")
+
+
 def test_external_oidc_endpoint(client, test_user, db_session, auth_header):
     with open(os.environ["SECRET_CONFIG"], "r") as f:
         configured_oidc = json.load(f)["external_oidc"]
@@ -228,3 +234,24 @@ def test_external_oidc_endpoint(client, test_user, db_session, auth_header):
             assert provider["refresh_token_expiration"] != None
         else:
             assert provider["refresh_token_expiration"] == None
+
+
+def test_app_config(app):
+    assert (
+        app.config["OIDC"]["idp_a"]["redirect_uri"]
+        == "https://workspace.planx-pla.net/wts-callback"
+    )
+    assert app.config["OIDC"]["idp_a"]["state_prefix"] == "test"
+    assert (
+        app.config["OIDC"]["default"]["redirect_uri"]
+        == "https://test.workspace.planx-pla.net/wts/oauth2/authorize"
+    )
+    assert app.config["OIDC"]["default"]["state_prefix"] == ""
+    client = app.oauth2_clients["idp_a"]
+    assert client.redirect_uri == "https://workspace.planx-pla.net/wts-callback"
+    assert client.metadata["state_prefix"] == "test"
+    assert (
+        client.metadata["authorize_url"]
+        == "https://some.data.commons/user/oauth2/authorize?idp=google"
+    )
+    assert client.metadata["api_base_url"] == "https://some.data.commons/user/"

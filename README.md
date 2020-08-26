@@ -83,3 +83,24 @@ The default OIDC client configuration (`fence_base_url`, `oidc_client_id` and `o
 Note that IDP IDs (`other-google` and `other-orcid` in the example above) must be unique _across the whole `external_oidc` block_.
 
 Also note that the OIDC clients you create must be granted `read-storage` access to all the data in the external Data Commons.
+
+
+## Dev-Test
+
+### Start database
+
+```
+cat - > docker-compose.yml <<EOM
+EOM
+
+docker-compose up -d
+psql -c 'create database wts_test;' -U postgres -h localhost
+```
+
+### Setup and run tests
+
+```
+pipenv shell
+pipenv install --dev
+pytest
+```

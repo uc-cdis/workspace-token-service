@@ -24,7 +24,7 @@ before_script:
 
 # run tests
 script:
-  - pipenv run py.test -vv --cov=wts --cov-report xml tests
+  - pipenv run pytest -vv --cov=wts --cov-report xml tests
   - pipenv run python th_wrapper.py -w truffles.json -c thog_config.json -g file:///${PWD}/ --check
 
 after_script:

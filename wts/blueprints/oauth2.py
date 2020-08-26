@@ -1,4 +1,7 @@
 import flask
+import traceback
+
+from authlib.common.security import generate_token
 from urllib.parse import urljoin
 
 from authutils.user import current_user
@@ -17,11 +20,10 @@ def connected():
     Check if user is connected and has a valid token
     """
     requested_idp = flask.request.args.get("idp", "default")
-
     # `current_user` validates the token and relies on `OIDC_ISSUER`
     # to know the issuer
     client = get_oauth_client(idp=requested_idp)
-    flask.current_app.config["OIDC_ISSUER"] = client.api_base_url.strip("/")
+    flask.current_app.config["OIDC_ISSUER"] = client.metadata["api_base_url"].strip("/")
 
     try:
         user = current_user
@@ -49,11 +51,17 @@ def get_authorization_url():
 
     requested_idp = flask.request.args.get("idp", "default")
     client = get_oauth_client(idp=requested_idp)
-    # This will be the value that was put in the ``client_kwargs`` in config.
-    redirect_uri = client.client_kwargs.get("redirect_uri")
+    # This will be the value that was put in the ``metadata`` in config.
+    state_prefix = client.metadata.get("state_prefix")
+    authorize_url = client.metadata.get("authorize_url")
+    state = generate_token()
+    if state_prefix:
+        state = state_prefix + "-" + state
     # Get the authorization URL and the random state; save the state to check
     # later, and return the URL.
-    (authorization_url, state) = client.generate_authorize_redirect(redirect_uri)
+    (authorization_url, state) = client.create_authorization_url(
+        authorize_url, state=state
+    )
     flask.session["state"] = state
     flask.session["idp"] = requested_idp
     return flask.redirect(authorization_url)

@@ -24,15 +24,14 @@ def get_access_token(expires=None):
         raise AuthError("User doesn't have a refresh token")
     if refresh_token.expires <= now:
         raise AuthError("your refresh token is expired, please login again")
-
     token = refresh_token.token
     if hasattr(flask.current_app, "encryption_key"):
         token = flask.current_app.encryption_key.decrypt(token)
-
     data = {"grant_type": "refresh_token", "refresh_token": token}
     auth = (client.client_id, client.client_secret)
     try:
-        r = requests.post(client.access_token_url, data=data, auth=auth)
+        url = client.metadata.get("access_token_url")
+        r = requests.post(url, data=data, auth=auth)
     except Exception:
         raise InternalError("Fail to reach fence")
     if r.status_code != 200:
