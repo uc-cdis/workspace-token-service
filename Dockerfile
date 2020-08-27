@@ -2,7 +2,7 @@
 # To check running container: docker exec -it wts /bin/bash
 
 
-FROM quay.io/cdis/python-nginx:pybase3-1.1.0
+FROM quay.io/cdis/python-nginx:pybase3-1.0.0
 
 
 ENV appname=wts
