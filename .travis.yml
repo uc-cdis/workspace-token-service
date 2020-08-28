@@ -16,16 +16,12 @@ install:
   - pipenv install --dev
   - pipenv graph
 
-before_install:
-  - wget https://raw.githubusercontent.com/uc-cdis/thwrapper/master/th_wrapper.py
-
 before_script:
   - psql -c 'create database wts_test;' -U postgres
 
 # run tests
 script:
   - pipenv run pytest -vv --cov=wts --cov-report xml tests
-  - pipenv run python th_wrapper.py -w truffles.json -c thog_config.json -g file:///${PWD}/ --check
 
 after_script:
   - pipenv run python-codacy-coverage -r coverage.xml
