@@ -83,7 +83,13 @@ The default OIDC client configuration (`fence_base_url`, `oidc_client_id` and `o
 
 Note that IDP IDs (`other-google` and `other-orcid` in the example above) must be unique _across the whole `external_oidc` block_.
 
-Also note that the OIDC clients you create must be granted `read-storage` access to all the data in the external Data Commons.
+Also note that the OIDC clients you create must be granted `read-storage` access to all the data in the external
+Data Commons via the data-commons' `user.yaml`.
+
+Finally, the `redirect_uri` property for external OIDC providers is
+an optional field that supports sharing OIDC client
+configuration between multiple workspace deployments
+as part of a multi-account application system.
 
 
 ## Dev-Test
@@ -117,7 +123,7 @@ gen3 devterm --namespace "$(gen3 jupyter j-namespace)" --user frickjack@uchicago
 
 Interact with the WTS:
 ```
-WTS="http://workspace-token-service.${KUBECTL_NAMESPACE##jupyter-pods-}.svc.cluster.local"
+WTS="http://workspace-token-service.${NAMESPACE:-${KUBECTL_NAMESPACE##jupyter-pods-}}.svc.cluster.local"
 curl $WTS/
 curl $WTS/external_oidc/ | jq -r .
 curl $WTS/token/?idp=default

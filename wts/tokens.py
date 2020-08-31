@@ -5,13 +5,9 @@ import time
 from cdiserrors import AuthError, InternalError
 
 from .models import db, RefreshToken
-from .utils import get_oauth_client
 
 
-def get_access_token(expires=None):
-    requested_idp = flask.request.args.get("idp", "default")
-    client = get_oauth_client(idp=requested_idp)
-
+def get_access_token(requested_idp, client, expires=None):
     now = int(time.time())
     refresh_token = (
         db.session.query(RefreshToken)
