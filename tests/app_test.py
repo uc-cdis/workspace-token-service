@@ -126,6 +126,9 @@ def test_token_endpoint(client, test_user, db_session):
         == "access_token_for_" + logged_in_user_data["default"]["refresh_token"]
     )
 
+    res = client.get("/token/?idp=bogus")
+    assert res.status_code == 400
+
 
 def test_authorize_endpoint(client, test_user, db_session, auth_header):
     fake_tokens = {"default": "eyJhbGciOiJtttt", "idp_a": "eyJhbGciOiJuuuu"}

@@ -5,9 +5,11 @@ import time
 from cdiserrors import AuthError, InternalError
 
 from .models import db, RefreshToken
+from .utils import get_oauth_client
 
 
-def get_access_token(requested_idp, client, expires=None):
+def get_access_token(requested_idp, expires=None):
+    client = get_oauth_client(idp=requested_idp)
     now = int(time.time())
     refresh_token = (
         db.session.query(RefreshToken)

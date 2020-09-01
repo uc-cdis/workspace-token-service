@@ -6,12 +6,11 @@ verify_ssl = true
 [dev-packages]
 codacy-coverage = "*"
 truffleHog = "*"
-mock = "~=1.0"
+mock = ">=4.0.2"
 PyGithub = "*"
-pytest = ">=3.2.3"
-pytest-cov = ">=2.5.1"
-pytest-flask = ">=0.10.0"
-PyYAML = ">=3.13"
+pytest = ">=6.0.1"
+pytest-cov = ">=2.10.1"
+pytest-flask = ">=1.0.0"
 
 [packages]
 alembic = ">=1.4.1"
@@ -28,8 +27,6 @@ python-jose = "~=3.0"
 kubernetes = "~=11.0.0"
 pyyaml = "~=5.3.1"
 authutils = "~=5.0.4"
-pytest = "*"
-mock = "*"
 
 [requires]
 python_version = "3.6"

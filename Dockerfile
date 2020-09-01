@@ -35,7 +35,7 @@ RUN mkdir -p /var/www/$appname \
     && chown nginx -R /var/www/.cache/Python-Eggs/ \
     && chown nginx /var/www/$appname
 
-# py https wants to access $HOME/.netrc -
+# py httpx in authlib wants to access $HOME/.netrc -
 # there is nothing secret in /root
 RUN touch /root/.netrc && chmod -R a+rX /root
 

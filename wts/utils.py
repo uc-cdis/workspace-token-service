@@ -2,6 +2,8 @@ import flask
 import json
 import os
 
+from cdiserrors import UserError
+
 
 def get_config_var(variable, default=None, secret_config={}):
     """
@@ -37,5 +39,5 @@ def get_oauth_client(idp=None):
         flask.current_app.logger.exception(
             'Requested IDP "{}" is not configured'.format(idp)
         )
-        raise
+        raise UserError('Requested IDP "{}" is not configured'.format(idp))
     return client
