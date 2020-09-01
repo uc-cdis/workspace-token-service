@@ -56,6 +56,7 @@ The `/token` endpoint is [dependent on the local Kubernetes](https://github.com/
             "base_url": "https://other-data-commons.net",
             "oidc_client_id": "xxx",
             "oidc_client_secret": "xxx",
+            "redirect_uri": "https://shared.redirect/whatever",
             "login_options": {
                 "other-google": {
                     "name": "Other Commons Google Login",
@@ -82,4 +83,55 @@ The default OIDC client configuration (`fence_base_url`, `oidc_client_id` and `o
 
 Note that IDP IDs (`other-google` and `other-orcid` in the example above) must be unique _across the whole `external_oidc` block_.
 
-Also note that the OIDC clients you create must be granted `read-storage` access to all the data in the external Data Commons.
+Also note that the OIDC clients you create must be granted `read-storage` access to all the data in the external
+Data Commons via the data-commons' `user.yaml`.
+
+Finally, the `redirect_uri` property for external OIDC providers is
+an optional field that supports sharing OIDC client
+configuration between multiple workspace deployments
+as part of a multi-account application system.
+
+
+## Dev-Test
+
+### Start database
+
+```
+cat - > docker-compose.yml <<EOM
+EOM
+
+docker-compose up -d
+psql -c 'create database wts_test;' -U postgres -h localhost
+```
+
+### Setup and run tests
+
+Local development like this:
+
+```
+pipenv shell
+pipenv install --dev
+pytest
+```
+
+### Test on kubernetes
+
+Open a `devterm` in the jupyter namespace:
+```
+gen3 devterm --namespace "$(gen3 jupyter j-namespace)" --user frickjack@uchicago.edu
+```
+
+Interact with the WTS:
+```
+WTS="http://workspace-token-service.${NAMESPACE:-${KUBECTL_NAMESPACE##jupyter-pods-}}.svc.cluster.local"
+curl $WTS/
+curl $WTS/external_oidc/ | jq -r .
+curl $WTS/token/?idp=default
+```
+
+### Initiate an OAUTH handshake
+
+First, login to the commons: https://your.commons/user/login/google?redirect=https://your.commons/user/user
+
+Now try to acquire an access token for some idp:
+https://your.commons/wts/oauth2/authorization_url?idp=default

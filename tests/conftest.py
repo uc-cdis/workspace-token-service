@@ -1,5 +1,6 @@
 from alembic.config import main as alembic_main
 from cryptography.fernet import Fernet
+import httpx
 import jwt
 import mock
 import pytest
@@ -22,7 +23,6 @@ from wts.models import db as _db
 
 
 def test_settings():
-
     settings = {
         "SECRET_CONFIG": "tests/test_settings.json",
         "ENCRYPTION_KEY": Fernet.generate_key().decode("utf-8"),
@@ -108,7 +108,7 @@ def auth_header(test_user, rsa_private_key, default_kid):
         "pur": "access",
         "aud": default_audiences,
         "sub": test_user.userid,
-        "iss": "localhost",
+        "iss": "https://localhost/user",
         "iat": now,
         "exp": now + 600,
         "jti": str(uuid.uuid4()),
@@ -146,7 +146,6 @@ def mock_requests(request, client, default_kid, rsa_public_key):
             mocked_response = mock.MagicMock(requests.Response)
             request_url = args[0]
             request_params = kwargs["data"]
-
             if request_url.endswith("/oauth2/token"):
                 mocked_response.status_code = 200
                 assert "refresh_token" in request_params
@@ -158,15 +157,31 @@ def mock_requests(request, client, default_kid, rsa_public_key):
             else:
                 client.post(request_url, args=args, kwargs=kwargs)
 
+        def make_mock_httpx_get_response(*args, **kwargs):
+            mocked_response = mock.MagicMock(httpx.Response)
+            request_url = args[0]
+            if request_url.endswith("/jwt/keys"):
+                mocked_response.status_code = 200
+                mocked_response.json = lambda: {"keys": [[default_kid, rsa_public_key]]}
+                return mocked_response
+            else:
+                client.get(request_url, args=args, kwargs=kwargs)
+
         mocked_get_request = mock.MagicMock(side_effect=make_mock_get_response)
         patched_get_request = mock.patch("requests.get", mocked_get_request)
         patched_get_request.start()
         request.addfinalizer(patched_get_request.stop)
 
         mocked_post_request = mock.MagicMock(side_effect=make_mock_post_response)
+        # requests.Session.request
         patched_post_request = mock.patch("requests.post", mocked_post_request)
         patched_post_request.start()
         request.addfinalizer(patched_post_request.stop)
+
+        mocked_httpx_get = mock.MagicMock(side_effect=make_mock_httpx_get_response)
+        patched_httpx_get = mock.patch("httpx.get", mocked_httpx_get)
+        patched_httpx_get.start()
+        request.addfinalizer(patched_httpx_get.stop)
 
     return do_patch
 
