@@ -1,5 +1,4 @@
 import flask
-import traceback
 
 from authlib.common.security import generate_token
 from urllib.parse import urljoin
