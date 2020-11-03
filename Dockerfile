@@ -7,9 +7,6 @@ FROM quay.io/cdis/python-nginx:pybase3-1.4.1
 
 ENV appname=wts
 
-# number of uwsgi worker processes
-ENV UWSGI_CHEAPER 2
-
 
 RUN apk update \
     && apk add postgresql-libs postgresql-dev libffi-dev libressl-dev \
