@@ -2,13 +2,10 @@
 # To check running container: docker exec -it wts /bin/bash
 
 
-FROM quay.io/cdis/python-nginx:pybase3-1.0.0
+FROM quay.io/cdis/python-nginx:pybase3-1.4.1
 
 
 ENV appname=wts
-
-# number of uwsgi worker processes
-ENV UWSGI_CHEAPER 2
 
 
 RUN apk update \
