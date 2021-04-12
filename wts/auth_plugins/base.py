@@ -26,5 +26,9 @@ class DefaultPlugin(object):
         flask.current_app.config["OIDC_ISSUER"] = default_oauth_client.metadata[
             "api_base_url"
         ].rstrip("/")
-        user = current_user
+        try:
+            user = current_user
+        except:
+            #  allow other plugins a chance to authenticate
+            return None
         return User(userid=user.id, username=user.username)
