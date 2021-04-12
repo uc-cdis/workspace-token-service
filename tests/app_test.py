@@ -153,7 +153,7 @@ def test_token_endpoint_without_auth_header(client, test_user, db_session):
     create_other_user_data(db_session)
 
     res = client.get("/token/")
-    assert res.status_code == 401
+    assert res.status_code == 403
 
 
 def test_authorize_endpoint(client, test_user, db_session, auth_header):

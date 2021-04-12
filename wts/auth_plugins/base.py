@@ -28,7 +28,7 @@ class DefaultPlugin(object):
         ].rstrip("/")
         try:
             user = current_user
+            return User(userid=user.id, username=user.username)
         except:
             #  allow other plugins a chance to authenticate
             return None
-        return User(userid=user.id, username=user.username)
