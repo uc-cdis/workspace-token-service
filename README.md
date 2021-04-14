@@ -17,7 +17,7 @@ OpenAPI Specification [here](http://petstore.swagger.io/?url=https://raw.githubu
 
 ## Why isn't WTS part of Fence?
 
-The `/token` endpoint is [dependent on the local Kubernetes](https://github.com/uc-cdis/workspace-token-service/blob/master/wts/auth_plugins/k8s.py). It trusts the caller ([Gen3Fuse](https://github.com/uc-cdis/gen3-fuse)) to pass the correct user identity.
+With the workspace architecture illustrated below, the `/token` endpoint [trusts](https://github.com/uc-cdis/workspace-token-service/blob/master/wts/auth_plugins/k8s.py) the caller ([Gen3Fuse](https://github.com/uc-cdis/gen3-fuse)) to pass the correct user identity.
 
 <img src="docs/img/architecture.svg">
 
