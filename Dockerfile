@@ -10,7 +10,7 @@ ENV appname=wts
 
 RUN apk update \
     && apk add postgresql-libs postgresql-dev libffi-dev libressl-dev \
-    && apk add linux-headers musl-dev gcc \
+    && apk add linux-headers musl-dev gcc g++ \
     && apk add curl bash git vim
 
 COPY . /$appname
