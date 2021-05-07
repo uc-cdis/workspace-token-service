@@ -17,6 +17,7 @@ from authutils.testing.fixtures import (
 )
 
 from wts.auth_plugins import find_user
+from wts.auth_plugins.base import User
 from wts.api import app as service_app
 from wts.api import _setup
 from wts.models import db as _db
@@ -51,7 +52,7 @@ def setup_test_database():
 
 @pytest.fixture(scope="function")
 def test_user():
-    return find_user()
+    return User(userid="test", username="test")
 
 
 @pytest.fixture(scope="session")

@@ -98,36 +98,62 @@ def test_connected_endpoint(client, test_user, db_session, auth_header):
     assert res.status_code == 200
 
 
-def test_token_endpoint(client, test_user, db_session):
+def test_token_endpoint_with_default_idp(client, test_user, db_session, auth_header):
     logged_in_user_data = create_logged_in_user_data(test_user, db_session)
     create_other_user_data(db_session)
 
     # the token returned for a specific IDP should be created using the
     # corresponding refresh_token, using the logged in user's username
-    res = client.get("/token/?idp=default")
+    res = client.get("/token/?idp=default", headers=auth_header)
     assert res.status_code == 200
     assert (
         res.json["token"]
         == "access_token_for_" + logged_in_user_data["default"]["refresh_token"]
     )
 
-    res = client.get("/token/?idp=idp_a")
+
+def test_token_endpoint_with_idp_a(client, test_user, db_session, auth_header):
+    logged_in_user_data = create_logged_in_user_data(test_user, db_session)
+    create_other_user_data(db_session)
+
+    res = client.get("/token/?idp=idp_a", headers=auth_header)
     assert res.status_code == 200
     assert (
         res.json["token"]
         == "access_token_for_" + logged_in_user_data["idp_a"]["refresh_token"]
     )
 
+
+def test_token_endpoint_without_specifying_idp(
+    client, test_user, db_session, auth_header
+):
+    logged_in_user_data = create_logged_in_user_data(test_user, db_session)
+    create_other_user_data(db_session)
+
     # make sure the IDP we use is "default" when no IDP is requested
-    res = client.get("/token/")
+    res = client.get("/token/", headers=auth_header)
     assert res.status_code == 200
     assert (
         res.json["token"]
         == "access_token_for_" + logged_in_user_data["default"]["refresh_token"]
     )
 
-    res = client.get("/token/?idp=bogus")
+
+def test_token_endpoint_with_bogus_idp(client, test_user, db_session, auth_header):
+    logged_in_user_data = create_logged_in_user_data(test_user, db_session)
+    create_other_user_data(db_session)
+
+    # make sure the IDP we use is "default" when no IDP is requested
+    res = client.get("/token/?idp=bogus", headers=auth_header)
     assert res.status_code == 400
+
+
+def test_token_endpoint_without_auth_header(client, test_user, db_session):
+    logged_in_user_data = create_logged_in_user_data(test_user, db_session)
+    create_other_user_data(db_session)
+
+    res = client.get("/token/")
+    assert res.status_code == 403
 
 
 def test_authorize_endpoint(client, test_user, db_session, auth_header):
