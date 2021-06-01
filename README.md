@@ -4,8 +4,6 @@ The reason we need this service is that a worker within a workspace is not tied 
 
 The Gen3 workspace token service acts as an OIDC client which acts on behalf of users to request refresh tokens from [Fence](https://github.com/uc-cdis/fence). This happens when a user logs into a workspace from the browser. WTS then stores the refresh token for that user, and manages access tokens and refresh tokens for workers that belong to specific users in the workspace.
 
-Each type of workspace environment should have a corresponding auth mechanism for the service to check the identity of a worker. Currently WTS has a K8s auth plugin that supports workers deployed as K8s pods with username annotation.
-
 OpenAPI Specification [here](http://petstore.swagger.io/?url=https://raw.githubusercontent.com/uc-cdis/workspace-token-service/master/openapi/swagger.yaml).
 
 
@@ -15,9 +13,9 @@ OpenAPI Specification [here](http://petstore.swagger.io/?url=https://raw.githubu
 - The worker calls `/token?expires=seconds` to get an access token
 
 
-## Why isn't WTS part of Fence?
+## Authentication
 
-The `/token` endpoint is [dependent on the local Kubernetes](https://github.com/uc-cdis/workspace-token-service/blob/master/wts/auth_plugins/k8s.py). It trusts the caller ([Gen3Fuse](https://github.com/uc-cdis/gen3-fuse)) to pass the correct user identity.
+If a JWT access token is supplied as a header in the request to the `/token` endpoint, `WTS` validates the supplied token and returns a new access token for the user. Otherwise, at the moment, as displayed in the illustration below, if no authorization header is provided, the `/token` endpoint returns a new access token corresponding to the `gen3username` K8s annotation set for the requesting pod.
 
 <img src="docs/img/architecture.svg">
 

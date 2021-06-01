@@ -8,7 +8,6 @@ from urllib.parse import urlparse
 from cdislogging import get_logger
 from cdiserrors import APIError
 
-from .auth_plugins import setup_plugins
 from .blueprints import oauth2, tokens, external_oidc
 from .models import db, Base, RefreshToken
 from .utils import get_config_var as get_var
@@ -50,10 +49,6 @@ def load_settings(app):
         app.config["SQLALCHEMY_DATABASE_URI"] = get_var("SQLALCHEMY_DATABASE_URI")
     url = get_var("FENCE_BASE_URL")
     fence_base_url = url if url.endswith("/") else (url + "/")
-
-    plugins = get_var("AUTH_PLUGINS", "default")
-    plugins = set(plugins.split(","))
-    app.config["AUTH_PLUGINS"] = plugins
 
     wts_base_url = get_var("WTS_BASE_URL")
     if not wts_base_url.endswith("/"):
@@ -129,7 +124,6 @@ def _setup(app):
         idp: OAuth2Session(**conf) for idp, conf in app.config["OIDC"].items()
     }
     app.logger.info("Set up OIDC clients: {}".format(list(app.oauth2_clients.keys())))
-    setup_plugins(app)
     db.init_app(app)
     app.register_blueprint(oauth2.blueprint, url_prefix="/oauth2")
     app.register_blueprint(tokens.blueprint, url_prefix="/token")
