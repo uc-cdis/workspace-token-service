@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 from cdislogging import get_logger
 from cdiserrors import APIError
 
-from .blueprints import oauth2, tokens, external_oidc
+from .blueprints import oauth2, tokens, external_oidc, aggregate
 from .models import db, Base, RefreshToken
 from .utils import get_config_var as get_var
 from .version_data import VERSION, COMMIT
@@ -128,6 +128,7 @@ def _setup(app):
     app.register_blueprint(oauth2.blueprint, url_prefix="/oauth2")
     app.register_blueprint(tokens.blueprint, url_prefix="/token")
     app.register_blueprint(external_oidc.blueprint, url_prefix="/external_oidc")
+    app.register_blueprint(aggregate.blueprint, url_prefix="/aggregate")
 
 
 @app.route("/_status", methods=["GET"])
