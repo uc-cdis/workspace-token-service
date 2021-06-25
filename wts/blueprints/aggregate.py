@@ -7,7 +7,7 @@ from urllib.parse import urljoin, urlparse
 
 from ..auth import async_login_required
 from ..models import db, RefreshToken
-from ..tokens import get_access_token2
+from ..tokens import async_get_access_token
 
 
 blueprint = flask.Blueprint("aggregate", __name__)
@@ -17,7 +17,6 @@ blueprint = flask.Blueprint("aggregate", __name__)
 @async_login_required
 async def get_aggregate_authz():
     auth_header = {"Authorization": flask.request.headers.get("Authorization")}
-    authz_endpoint = "https://john.planx-pla.net/user/user"
 
     # XXX consider multiple tokens per idp and multiple idps per commons
     aggregate_tokens = db.session.query(RefreshToken).filter_by(
@@ -27,7 +26,7 @@ async def get_aggregate_authz():
     async def get_user_info(refresh_token):
         fence_url = flask.current_app.config["OIDC"][refresh_token.idp]["api_base_url"]
         fence_user_info_url = urljoin(fence_url, "user")
-        access_token = get_access_token2(refresh_token)
+        access_token = await async_get_access_token(refresh_token)
         auth_header = {"Authorization": f"Bearer {access_token}"}
 
         async with httpx.AsyncClient() as client:

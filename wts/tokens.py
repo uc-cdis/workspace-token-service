@@ -1,6 +1,7 @@
 import flask
 import requests
 import time
+import httpx
 
 from cdiserrors import AuthError, InternalError
 
@@ -37,8 +38,9 @@ def get_access_token(requested_idp, expires=None):
     return r.json()["access_token"]
 
 
-# XXX put logic in get_access_token
-def get_access_token2(refresh_token):
+# XXX support requested_idp, expires arguments so that this replaces
+# get_access_token function
+async def async_get_access_token(refresh_token):
     client = get_oauth_client(idp=refresh_token.idp)
     now = int(time.time())
     if not refresh_token:
@@ -52,7 +54,8 @@ def get_access_token2(refresh_token):
     auth = (client.client_id, client.client_secret)
     try:
         url = client.metadata.get("access_token_url")
-        r = requests.post(url, data=data, auth=auth)
+        async with httpx.AsyncClient() as http_client:
+            r = await http_client.post(url, data=data, auth=auth)
     except Exception:
         raise InternalError("Fail to reach fence")
     if r.status_code != 200:
