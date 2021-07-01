@@ -21,7 +21,7 @@ WORKDIR /$appname
 RUN python -m pip install --upgrade pip \
     && pip install pipenv \
     && pipenv lock \
-    && python -m pipenv install --system --deploy --verbose \
+    && python -m pipenv install --system --deploy \
     && pip freeze
 
 RUN mkdir -p /var/www/$appname \
