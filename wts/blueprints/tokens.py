@@ -1,6 +1,7 @@
 import flask
 
-from ..auth import login_required
+from cdiserrors import AuthError
+from ..auth_plugins import find_user
 from ..tokens import get_access_token
 
 
@@ -10,8 +11,12 @@ blueprint.route("")
 
 
 @blueprint.route("/")
-@login_required
 def get_token():
+    requested_idp = flask.request.args.get("idp", "default")
+    flask.g.user = find_user(allow_access_token=(requested_idp != "default"))
+    if not flask.g.user:
+        raise AuthError("You need to be authenticated to use this resource")
+
     expires = flask.request.args.get("expires")
     if expires:
         try:
@@ -19,5 +24,4 @@ def get_token():
         except ValueError:
             return flask.jsonify({"error": "expires has to be an integer"}), 400
 
-    requested_idp = flask.request.args.get("idp", "default")
     return flask.jsonify({"token": get_access_token(requested_idp, expires=expires)})
