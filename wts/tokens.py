@@ -3,20 +3,13 @@ import requests
 import time
 import httpx
 
-from cdiserrors import AuthError, InternalError
+from cdiserrors import AuthError, InternalError, UserError
 
 from .models import db, RefreshToken
 from .utils import get_oauth_client
 
 
 def get_data_for_fence_request(refresh_token):
-    now = int(time.time())
-    if not refresh_token:
-        raise AuthError("User doesn't have a refresh token")
-    #  XXX this is ok when called from /token and get_access_token, but what
-    #  about when called from /aggregate/authz and async_get_access_token
-    if refresh_token.expires <= now:
-        raise AuthError("your refresh token is expired, please login again")
     token = refresh_token.token
     if hasattr(flask.current_app, "encryption_key"):
         token = flask.current_app.encryption_key.decrypt(token)
@@ -28,6 +21,8 @@ def get_data_for_fence_request(refresh_token):
 
 
 def get_access_token(requested_idp, expires=None):
+    if requested_idp not in flask.current_app.oauth2_clients:
+        raise UserError('Requested IDP "{}" is not configured'.format(requested_idp))
     refresh_token = (
         db.session.query(RefreshToken)
         .filter_by(username=flask.g.user.username)
@@ -35,6 +30,13 @@ def get_access_token(requested_idp, expires=None):
         .order_by(RefreshToken.expires.desc())
         .first()
     )
+    now = int(time.time())
+    if not refresh_token:
+        raise AuthError("User doesn't have a refresh token")
+    #  XXX this is ok when called from /token and get_access_token, but what
+    #  about when called from /aggregate/authz and async_get_access_token
+    if refresh_token.expires <= now:
+        raise AuthError("your refresh token is expired, please login again")
     url, data, auth = get_data_for_fence_request(refresh_token)
     try:
         r = requests.post(url, data=data, auth=auth)
