@@ -14,14 +14,13 @@ from ..tokens import async_get_access_token
 blueprint = flask.Blueprint("aggregate", __name__)
 
 
+#  TODO add swagger doc for this endpoint
+#  TODO add tests
 @blueprint.route("/authz", methods=["GET"])
 @async_login_required
 async def get_aggregate_authz():
     auth_header = {"Authorization": flask.request.headers.get("Authorization")}
 
-    # XXX consider multiple idps per commons and multiple tokens per idp
-    # XXX maybe filter by unexpired
-    # XXX should we return {} for commons that haven't been linked yet (i.e. no refresh token)
     refresh_tokens = (
         db.session.query(RefreshToken)
         .filter_by(username=flask.g.user.username)
@@ -29,15 +28,14 @@ async def get_aggregate_authz():
         .order_by(RefreshToken.expires.asc())
     )
 
-    #  XXX better comment
-    #  we want the latest refresh tokens to win
+    #  if a user has multiple refresh tokens for the same commons, we want the
+    #  latest one to be used. see https://stackoverflow.com/questions/39678672/is-a-python-dict-comprehension-always-last-wins-if-there-are-duplicate-keys
     aggregate_tokens = {
         flask.current_app.config["OIDC"][rt.idp]["api_base_url"]: rt
         for rt in refresh_tokens
     }
 
     async def get_user_info(fence_url, refresh_token):
-        #  fence_url = flask.current_app.config["OIDC"][refresh_token.idp]["api_base_url"]
         fence_user_info_url = urljoin(fence_url, "user")
 
         commons_hostname = urlparse(fence_url).netloc

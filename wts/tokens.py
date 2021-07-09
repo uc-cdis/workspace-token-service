@@ -33,8 +33,6 @@ def get_access_token(requested_idp, expires=None):
     now = int(time.time())
     if not refresh_token:
         raise AuthError("User doesn't have a refresh token")
-    #  XXX this is ok when called from /token and get_access_token, but what
-    #  about when called from /aggregate/authz and async_get_access_token
     if refresh_token.expires <= now:
         raise AuthError("your refresh token is expired, please login again")
     url, data, auth = get_data_for_fence_request(refresh_token)
