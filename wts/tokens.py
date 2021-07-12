@@ -46,10 +46,13 @@ def get_access_token(requested_idp, expires=None):
 
 
 async def async_get_access_token(refresh_token):
+    import pdb
+
+    pdb.set_trace()
     try:
         url, data, auth = get_data_for_fence_request(refresh_token)
         async with httpx.AsyncClient() as http_client:
-            r = await http_client.post(url, data=data, auth=auth)
+            res = await http_client.post(url, data=data, auth=auth)
     except httpx.RequestError as e:
         flask.current_app.logger.error(
             "Failed to POST %s to obtain access token", e.request.url
@@ -64,4 +67,4 @@ async def async_get_access_token(refresh_token):
         return ""
     except:
         return ""
-    return r.json()["access_token"]
+    return res.json()["access_token"]

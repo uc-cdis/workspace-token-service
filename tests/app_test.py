@@ -3,6 +3,8 @@ import mock
 import os
 import time
 import uuid
+import httpx
+from urllib.parse import urljoin
 
 from wts.models import RefreshToken
 from wts.resources.oauth2 import find_valid_refresh_token
@@ -143,7 +145,6 @@ def test_token_endpoint_with_bogus_idp(client, test_user, db_session, auth_heade
     logged_in_user_data = create_logged_in_user_data(test_user, db_session)
     create_other_user_data(db_session)
 
-    # make sure the IDP we use is "default" when no IDP is requested
     res = client.get("/token/?idp=bogus", headers=auth_header)
     assert res.status_code == 400
 
@@ -154,6 +155,65 @@ def test_token_endpoint_without_auth_header(client, test_user, db_session):
 
     res = client.get("/token/")
     assert res.status_code == 403
+
+
+#  def test_aggregate_authz_endpoint(test_user, db_session):
+# @respx.mock(assert_all_mocked=False)
+def test_aggregate_authz_endpoint(
+    app, db_session, test_user, client, auth_header, respx_mock
+):
+    logged_in_user_data = create_logged_in_user_data(test_user, db_session)
+    create_other_user_data(db_session)
+
+    #  httpx.AsyncClient.get = mock.AsyncMock(return_value={"localhost": "yoyo"})
+    #  def side_effect(*args, **kwargs):
+    #  import pdb; pdb.set_trace()
+    #  request_url = args[0]
+    #  if request_url.endswith("/user"):
+    #  return {"localhost": "/programs"}
+    #  #  async_client.get(request_url, args=args, kwargs=kwargs)
+    #  return mock.DEFAULT
+    #  httpx.AsyncClient.get = mock.AsyncMock(side_effect=side_effect)
+
+    #  res = client.get("/aggregate/authz", headers=auth_header)
+
+    #  import pdb; pdb.set_trace()
+    fence_url = app.config["OIDC"]["default"]["api_base_url"].rstrip("/")
+    fence_user_info_url = f"{fence_url}/user"
+    # fence_user_info_url = urljoin(fence_url, "user")
+
+    # respx.get(fence_user_info_url).mock(return_value=httpx.Response(204, json={"whatever_hostname": "/programs"}))
+    respx_mock.get(fence_user_info_url).mock(
+        return_value=httpx.Response(204, json={"whatever_hostname": "/programs"})
+    )
+
+    # respx.get(url=fence_user_info_url, status_code=200, content={"whatever_hostname": "/programs"}, alias="fence_user_info_get")
+    # respx.get(url=fence_user_info_url, content={"whatever_hostname": "/programs"})
+    fence_token_url = f"{fence_url}/oauth2/token"
+    # print(f"fence_token_url: {fence_token_url}")
+
+    respx_mock.post(fence_token_url).mock(
+        return_value=httpx.Response(204, json={"access_token": "at123"})
+    )
+    # import pdb; pdb.set_trace()
+    # respx.post(fence_token_url, status_code=200, content={"access_token": "at123"})
+    # respx.post(fence_token_url, content={"access_token": "at123"})
+    #  respx.post(fence_token_url).mock(return_value=httpx.Response(200, json={"access_token": "at123"}))
+
+    #  async with httpx.AsyncClient(app=app, base_url="http://test") as async_client:
+    #  async with httpx.AsyncClient() as async_client:
+    #  async_client.get = mock.AsyncMock(side_effect=side_effect)
+    #  res = await async_client.get("/aggregate/authz", headers=auth_header)
+
+    # res = client.get("/aggregate/authz", headers=auth_header)
+    res = client.get("/aggregate/user/user", headers=auth_header)
+
+    #  import pdb; pdb.set_trace()
+    assert res.status_code == 200
+    #  assert (
+    #  res.json["token"]
+    #  == "access_token_for_" + logged_in_user_data["default"]["refresh_token"]
+    #  )
 
 
 def test_authorize_endpoint(client, test_user, db_session, auth_header):

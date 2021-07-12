@@ -57,6 +57,7 @@ def load_settings(app):
     oauth_config = {
         "client_id": get_var("OIDC_CLIENT_ID"),
         "client_secret": get_var("OIDC_CLIENT_SECRET"),
+        "commons_hostname": urlparse(fence_base_url).netloc,
         "api_base_url": fence_base_url,
         "authorize_url": fence_base_url + "oauth2/authorize",
         "access_token_url": fence_base_url + "oauth2/token",
@@ -84,6 +85,7 @@ def load_settings(app):
             app.config["OIDC"][idp] = {
                 "client_id": get_var("OIDC_CLIENT_ID", secret_config=conf),
                 "client_secret": get_var("OIDC_CLIENT_SECRET", secret_config=conf),
+                "commons_hostname": urlparse(fence_base_url).netloc,
                 "api_base_url": fence_base_url,
                 "authorize_url": authorization_url,
                 "access_token_url": fence_base_url + "oauth2/token",
