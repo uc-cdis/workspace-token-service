@@ -4,7 +4,8 @@ import os
 import time
 import uuid
 import httpx
-from urllib.parse import urljoin
+import respx
+import urllib
 
 from wts.models import RefreshToken
 from wts.resources.oauth2 import find_valid_refresh_token
@@ -157,63 +158,69 @@ def test_token_endpoint_without_auth_header(client, test_user, db_session):
     assert res.status_code == 403
 
 
-#  def test_aggregate_authz_endpoint(test_user, db_session):
-# @respx.mock(assert_all_mocked=False)
+# test_aggregate_other_user_not_returned
+# test_aggregate_one_commons_missing
+# test_aggregate_all_commons_missing
+
+
+def post_fence_token_side_effect(request):
+    request_data = urllib.parse.parse_qs(request.content.decode())
+    assert "refresh_token" in request_data
+    refresh_token = request_data["refresh_token"][0]
+    return httpx.Response(
+        200, json={"access_token": f"access_token_for_{refresh_token}"}
+    )
+
+
+def get_fence_user_side_effect(request):
+    acl = {
+        "access_token_for_eyJhbGciOiJaaaa": "/a",
+        "access_token_for_eyJhbGciOiJbbbb": "/b",
+        "access_token_for_eyJhbGciOiJcccc": "/c",
+        "access_token_for_eyJhbGciOiJyyyy": "/y",
+        "access_token_for_eyJhbGciOiJzzzz": "/z",
+    }
+    access_token = request.headers["Authorization"].split(" ")[1]
+    assert access_token in acl
+    return httpx.Response(
+        200, json={"authz": {acl[access_token]: [{"method": "read", "service": "*"}]}}
+    )
+
+
 def test_aggregate_authz_endpoint(
     app, db_session, test_user, client, auth_header, respx_mock
 ):
     logged_in_user_data = create_logged_in_user_data(test_user, db_session)
     create_other_user_data(db_session)
 
-    #  httpx.AsyncClient.get = mock.AsyncMock(return_value={"localhost": "yoyo"})
-    #  def side_effect(*args, **kwargs):
-    #  import pdb; pdb.set_trace()
-    #  request_url = args[0]
-    #  if request_url.endswith("/user"):
-    #  return {"localhost": "/programs"}
-    #  #  async_client.get(request_url, args=args, kwargs=kwargs)
-    #  return mock.DEFAULT
-    #  httpx.AsyncClient.get = mock.AsyncMock(side_effect=side_effect)
+    for idp, idp_config in app.config["OIDC"].items():
+        fence_url = idp_config["api_base_url"].rstrip("/")
 
-    #  res = client.get("/aggregate/authz", headers=auth_header)
+        fence_token_url = f"{fence_url}/oauth2/token"
+        respx_mock.post(fence_token_url).mock(side_effect=post_fence_token_side_effect)
 
-    #  import pdb; pdb.set_trace()
-    fence_url = app.config["OIDC"]["default"]["api_base_url"].rstrip("/")
-    fence_user_info_url = f"{fence_url}/user"
-    # fence_user_info_url = urljoin(fence_url, "user")
+        fence_user_info_url = f"{fence_url}/user"
+        respx_mock.get(fence_user_info_url).mock(side_effect=get_fence_user_side_effect)
 
-    # respx.get(fence_user_info_url).mock(return_value=httpx.Response(204, json={"whatever_hostname": "/programs"}))
-    respx_mock.get(fence_user_info_url).mock(
-        return_value=httpx.Response(204, json={"whatever_hostname": "/programs"})
-    )
-
-    # respx.get(url=fence_user_info_url, status_code=200, content={"whatever_hostname": "/programs"}, alias="fence_user_info_get")
-    # respx.get(url=fence_user_info_url, content={"whatever_hostname": "/programs"})
-    fence_token_url = f"{fence_url}/oauth2/token"
-    # print(f"fence_token_url: {fence_token_url}")
-
-    respx_mock.post(fence_token_url).mock(
-        return_value=httpx.Response(204, json={"access_token": "at123"})
-    )
-    # import pdb; pdb.set_trace()
-    # respx.post(fence_token_url, status_code=200, content={"access_token": "at123"})
-    # respx.post(fence_token_url, content={"access_token": "at123"})
-    #  respx.post(fence_token_url).mock(return_value=httpx.Response(200, json={"access_token": "at123"}))
-
-    #  async with httpx.AsyncClient(app=app, base_url="http://test") as async_client:
-    #  async with httpx.AsyncClient() as async_client:
-    #  async_client.get = mock.AsyncMock(side_effect=side_effect)
-    #  res = await async_client.get("/aggregate/authz", headers=auth_header)
-
-    # res = client.get("/aggregate/authz", headers=auth_header)
     res = client.get("/aggregate/user/user", headers=auth_header)
 
-    #  import pdb; pdb.set_trace()
     assert res.status_code == 200
-    #  assert (
-    #  res.json["token"]
-    #  == "access_token_for_" + logged_in_user_data["default"]["refresh_token"]
-    #  )
+
+    default_commons_hostname = app.config["OIDC"]["default"]["commons_hostname"]
+    assert default_commons_hostname in res.json
+    assert "/a" in res.json[default_commons_hostname]
+    assert "/b" not in res.json[default_commons_hostname]
+    assert "/c" not in res.json[default_commons_hostname]
+    assert "/y" not in res.json[default_commons_hostname]
+    assert "/z" not in res.json[default_commons_hostname]
+
+    idp_a_commons_hostname = app.config["OIDC"]["idp_a"]["commons_hostname"]
+    assert idp_a_commons_hostname in res.json
+    assert "/b" in res.json[idp_a_commons_hostname]
+    assert "/a" not in res.json[idp_a_commons_hostname]
+    assert "/c" not in res.json[idp_a_commons_hostname]
+    assert "/y" not in res.json[idp_a_commons_hostname]
+    assert "/z" not in res.json[idp_a_commons_hostname]
 
 
 def test_authorize_endpoint(client, test_user, db_session, auth_header):

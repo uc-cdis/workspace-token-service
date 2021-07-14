@@ -46,9 +46,6 @@ def get_access_token(requested_idp, expires=None):
 
 
 async def async_get_access_token(refresh_token):
-    import pdb
-
-    pdb.set_trace()
     try:
         url, data, auth = get_data_for_fence_request(refresh_token)
         async with httpx.AsyncClient() as http_client:
