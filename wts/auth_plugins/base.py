@@ -11,7 +11,7 @@ class User(object):
         self.username = username
 
 
-class DefaultPlugin(object):
+class AccessTokenPlugin(object):
     def __init__(self):
         pass
 
