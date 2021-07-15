@@ -15,7 +15,11 @@ OpenAPI Specification [here](http://petstore.swagger.io/?url=https://raw.githubu
 
 ## Authentication
 
-If a JWT access token is supplied as a header in the request to the `/token` endpoint, `WTS` validates the supplied token and returns a new access token for the user. Otherwise, at the moment, as displayed in the illustration below, if no authorization header is provided, the `/token` endpoint returns a new access token corresponding to the `gen3username` K8s annotation set for the requesting pod.
+Two methods exist for authenticating a request to the `/token` endpoint:
+
+1) `WTS` checks for the presence of a JWT access token in the `Authorization` header and validates said token. To prevent a user from being able to indefinitely generate access tokens using access tokens returned from `WTS`, this means of authentication is not available for requests with the `idp` URL query parameter omitted or `idp=default`.
+
+2) If a JWT access token is not provided, the `idp` parameter is omitted, or `idp=default`, then `WTS` determines the current user from the `gen3username` K8s annotation set for the requesting pod.
 
 <img src="docs/img/architecture.svg">
 
