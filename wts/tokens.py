@@ -1,5 +1,4 @@
 import flask
-import requests
 import time
 import httpx
 
@@ -37,7 +36,7 @@ def get_access_token(requested_idp, expires=None):
         raise AuthError("your refresh token is expired, please login again")
     url, data, auth = get_data_for_fence_request(refresh_token)
     try:
-        r = requests.post(url, data=data, auth=auth)
+        r = httpx.post(url, data=data, auth=auth)
     except Exception:
         raise InternalError("Fail to reach fence")
     if r.status_code != 200:

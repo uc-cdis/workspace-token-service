@@ -1,10 +1,8 @@
 import asyncio
 import flask
 import httpx
-import requests
 import time
-
-from urllib.parse import urljoin, urlparse
+from cdiserrors import NotFoundError
 
 from ..auth import async_login_required
 from ..models import db, RefreshToken
@@ -19,7 +17,14 @@ blueprint = flask.Blueprint("aggregate", __name__)
 @blueprint.route("/<path:endpoint>", methods=["GET"])
 @async_login_required
 async def get_aggregate_authz(endpoint):
-    auth_header = {"Authorization": flask.request.headers.get("Authorization")}
+    # for `GET /aggregate/user/user`, flask sets endpoint to 'user/user'
+    endpoint = f"/{endpoint}"
+    if endpoint not in flask.current_app.config["AGGREGATE_ENDPOINT_ALLOWLIST"]:
+        raise NotFoundError(
+            "supplied endpoint is not configured in the Workspace Token Service aggregate endpoint allowlist"
+        )
+
+    filters = flask.request.args.getlist("filters")
 
     refresh_tokens = (
         db.session.query(RefreshToken)
@@ -35,9 +40,8 @@ async def get_aggregate_authz(endpoint):
         for rt in refresh_tokens
     }
 
-    async def get_user_info(commons_hostname, refresh_token):
-        # for `GET /aggregate/user/user`, flask set endpoint to 'user/user'
-        endpoint_url = f"https://{commons_hostname}/{endpoint}"
+    async def get_endpoint(commons_hostname, refresh_token):
+        endpoint_url = f"https://{commons_hostname}{endpoint}"
 
         authz_info = {}
         access_token = await async_get_access_token(refresh_token)
@@ -63,11 +67,19 @@ async def get_aggregate_authz(endpoint):
                 e.request.url,
             )
 
-        authz_info = endpoint_response.json()["authz"]
-        return [commons_hostname, authz_info]
+        data = endpoint_response.json()
+        for filter_parameter in filters:
+            if filter_parameter not in data:
+                raise UserError(
+                    "at least one of the provided filters is not a key in the response returned from f{endpoint_url}"
+                )
+
+        if filters:
+            data = {k: data[k] for k in filters}
+        return [commons_hostname, data]
 
     commons_user_info = await asyncio.gather(
-        *[get_user_info(u, rt) for u, rt in aggregate_tokens.items()]
+        *[get_endpoint(u, rt) for u, rt in aggregate_tokens.items()]
     )
 
     # TODO will flask.jsonify(commons_user_info) work?

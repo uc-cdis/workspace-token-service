@@ -163,44 +163,12 @@ def test_token_endpoint_without_auth_header(client, test_user, db_session):
 # test_aggregate_all_commons_missing
 
 
-def post_fence_token_side_effect(request):
-    request_data = urllib.parse.parse_qs(request.content.decode())
-    assert "refresh_token" in request_data
-    refresh_token = request_data["refresh_token"][0]
-    return httpx.Response(
-        200, json={"access_token": f"access_token_for_{refresh_token}"}
-    )
-
-
-def get_fence_user_side_effect(request):
-    acl = {
-        "access_token_for_eyJhbGciOiJaaaa": "/a",
-        "access_token_for_eyJhbGciOiJbbbb": "/b",
-        "access_token_for_eyJhbGciOiJcccc": "/c",
-        "access_token_for_eyJhbGciOiJyyyy": "/y",
-        "access_token_for_eyJhbGciOiJzzzz": "/z",
-    }
-    access_token = request.headers["Authorization"].split(" ")[1]
-    assert access_token in acl
-    return httpx.Response(
-        200, json={"authz": {acl[access_token]: [{"method": "read", "service": "*"}]}}
-    )
-
-
-def test_aggregate_authz_endpoint(
+def test_aggregate_user_user_endpoint(
     app, db_session, test_user, client, auth_header, respx_mock
 ):
     logged_in_user_data = create_logged_in_user_data(test_user, db_session)
     create_other_user_data(db_session)
-
-    for idp, idp_config in app.config["OIDC"].items():
-        fence_url = idp_config["api_base_url"].rstrip("/")
-
-        fence_token_url = f"{fence_url}/oauth2/token"
-        respx_mock.post(fence_token_url).mock(side_effect=post_fence_token_side_effect)
-
-        fence_user_info_url = f"{fence_url}/user"
-        respx_mock.get(fence_user_info_url).mock(side_effect=get_fence_user_side_effect)
+    # create_mocks_for_fence_user(app, respx_mock)
 
     res = client.get("/aggregate/user/user", headers=auth_header)
 
@@ -208,19 +176,28 @@ def test_aggregate_authz_endpoint(
 
     default_commons_hostname = app.config["OIDC"]["default"]["commons_hostname"]
     assert default_commons_hostname in res.json
-    assert "/a" in res.json[default_commons_hostname]
-    assert "/b" not in res.json[default_commons_hostname]
-    assert "/c" not in res.json[default_commons_hostname]
-    assert "/y" not in res.json[default_commons_hostname]
-    assert "/z" not in res.json[default_commons_hostname]
+
+    default_commons_authz_mapping = res.json[default_commons_hostname]["authz"]
+    assert "/a" in default_commons_authz_mapping
+    assert "/b" not in default_commons_authz_mapping
+    assert "/c" not in default_commons_authz_mapping
+    assert "/y" not in default_commons_authz_mapping
+    assert "/z" not in default_commons_authz_mapping
 
     idp_a_commons_hostname = app.config["OIDC"]["idp_a"]["commons_hostname"]
     assert idp_a_commons_hostname in res.json
-    assert "/b" in res.json[idp_a_commons_hostname]
-    assert "/a" not in res.json[idp_a_commons_hostname]
-    assert "/c" not in res.json[idp_a_commons_hostname]
-    assert "/y" not in res.json[idp_a_commons_hostname]
-    assert "/z" not in res.json[idp_a_commons_hostname]
+
+    idp_a_commons_authz_mapping = res.json[idp_a_commons_hostname]["authz"]
+    assert "/b" in idp_a_commons_authz_mapping
+    assert "/a" not in idp_a_commons_authz_mapping
+    assert "/c" not in idp_a_commons_authz_mapping
+    assert "/y" not in idp_a_commons_authz_mapping
+    assert "/z" not in idp_a_commons_authz_mapping
+
+
+def test_aggregate_with_endpoint_not_in_allowlist(client, auth_header):
+    res = client.get("/aggregate/user/credentials/api", headers=auth_header)
+    assert res.status_code == 404
 
 
 def test_authorize_endpoint(client, test_user, db_session, auth_header):
@@ -283,6 +260,7 @@ def test_authorize_endpoint(client, test_user, db_session, auth_header):
             assert t.token == fake_tokens["idp_a"]
 
 
+# TODO review this endpoint if refactoring mocks
 def test_authorization_url_endpoint(client):
     res = client.get("/oauth2/authorization_url?idp=idp_a")
     assert res.status_code == 302
