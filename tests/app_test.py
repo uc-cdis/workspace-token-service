@@ -11,70 +11,11 @@ from wts.models import RefreshToken
 from wts.resources.oauth2 import find_valid_refresh_token
 
 
-def insert_into_refresh_token_table(db_session, idp, data):
-    now = int(time.time())
-    db_session.add(
-        RefreshToken(
-            idp=idp,
-            token=data["refresh_token"],
-            username=data["username"],
-            userid=data["userid"],
-            expires=data.get("expires", now + 100),
-            jti=str(uuid.uuid4()),
-        )
-    )
-    db_session.commit()
-
-
-def create_logged_in_user_data(test_user, db_session):
-    now = int(time.time())
-    logged_in_user_data = {
-        "default": {
-            "username": test_user.username,
-            "userid": test_user.userid,
-            "refresh_token": "eyJhbGciOiJaaaa",
-        },
-        "idp_a": {
-            "username": test_user.username,
-            "userid": test_user.userid,
-            "refresh_token": "eyJhbGciOiJbbbb",
-        },
-        "idp_with_expired_token": {
-            "username": test_user.username,
-            "userid": test_user.userid,
-            "refresh_token": "eyJhbGciOiJcccc",
-            "expires": now - 100,  # expired
-        },
-    }
-    for idp, data in logged_in_user_data.items():
-        insert_into_refresh_token_table(db_session, idp, data)
-    return logged_in_user_data
-
-
-def create_other_user_data(db_session):
-    other_user_data = {
-        "default": {
-            "username": "someone_else",
-            "userid": "123456",
-            "refresh_token": "eyJhbGciOiJzzzz",
-        },
-        "idp_a": {
-            "username": "someone_else",
-            "userid": "123456",
-            "refresh_token": "eyJhbGciOiJyyyy",
-        },
-    }
-    for idp, data in other_user_data.items():
-        insert_into_refresh_token_table(db_session, idp, data)
-    return other_user_data
-
-
-def test_find_valid_refresh_token(test_user, db_session):
-    logged_in_user_data = create_logged_in_user_data(test_user, db_session)
+def test_find_valid_refresh_token(logged_in_users):
 
     # valid refresh token
     idp = "idp_a"
-    username = logged_in_user_data[idp]["username"]
+    username = logged_in_users[idp][0]["username"]
     assert find_valid_refresh_token(username, idp)
 
     # expired refresh token
@@ -91,69 +32,52 @@ def test_find_valid_refresh_token(test_user, db_session):
     assert not find_valid_refresh_token(username, idp)
 
 
-def test_connected_endpoint(client, test_user, db_session, auth_header):
+def test_connected_endpoint_without_logged_in_users(client, db_session, auth_header):
     res = client.get("/oauth2/connected", headers=auth_header)
     assert res.status_code == 403
 
-    create_logged_in_user_data(test_user, db_session)
 
+def test_connected_endpoint_with_logged_in_users(client, auth_header, logged_in_users):
     res = client.get("/oauth2/connected", headers=auth_header)
     assert res.status_code == 200
 
 
-def test_token_endpoint_with_default_idp(client, test_user, db_session, auth_header):
-    logged_in_user_data = create_logged_in_user_data(test_user, db_session)
-    create_other_user_data(db_session)
-
+def test_token_endpoint_with_default_idp(client, logged_in_users, auth_header):
     # the token returned for a specific IDP should be created using the
     # corresponding refresh_token, using the logged in user's username
     res = client.get("/token/?idp=default", headers=auth_header)
     assert res.status_code == 200
     assert (
         res.json["token"]
-        == "access_token_for_" + logged_in_user_data["default"]["refresh_token"]
+        == "access_token_for_" + logged_in_users["default"][0]["refresh_token"]
     )
 
 
-def test_token_endpoint_with_idp_a(client, test_user, db_session, auth_header):
-    logged_in_user_data = create_logged_in_user_data(test_user, db_session)
-    create_other_user_data(db_session)
-
+def test_token_endpoint_with_idp_a(client, logged_in_users, auth_header):
     res = client.get("/token/?idp=idp_a", headers=auth_header)
     assert res.status_code == 200
     assert (
         res.json["token"]
-        == "access_token_for_" + logged_in_user_data["idp_a"]["refresh_token"]
+        == "access_token_for_" + logged_in_users["idp_a"][0]["refresh_token"]
     )
 
 
-def test_token_endpoint_without_specifying_idp(
-    client, test_user, db_session, auth_header
-):
-    logged_in_user_data = create_logged_in_user_data(test_user, db_session)
-    create_other_user_data(db_session)
-
+def test_token_endpoint_without_specifying_idp(client, logged_in_users, auth_header):
     # make sure the IDP we use is "default" when no IDP is requested
     res = client.get("/token/", headers=auth_header)
     assert res.status_code == 200
     assert (
         res.json["token"]
-        == "access_token_for_" + logged_in_user_data["default"]["refresh_token"]
+        == "access_token_for_" + logged_in_users["default"][0]["refresh_token"]
     )
 
 
-def test_token_endpoint_with_bogus_idp(client, test_user, db_session, auth_header):
-    logged_in_user_data = create_logged_in_user_data(test_user, db_session)
-    create_other_user_data(db_session)
-
+def test_token_endpoint_with_bogus_idp(client, logged_in_users, auth_header):
     res = client.get("/token/?idp=bogus", headers=auth_header)
     assert res.status_code == 400
 
 
-def test_token_endpoint_without_auth_header(client, test_user, db_session):
-    logged_in_user_data = create_logged_in_user_data(test_user, db_session)
-    create_other_user_data(db_session)
-
+def test_token_endpoint_without_auth_header(client, logged_in_users):
     res = client.get("/token/")
     assert res.status_code == 403
 
@@ -163,13 +87,7 @@ def test_token_endpoint_without_auth_header(client, test_user, db_session):
 # test_aggregate_all_commons_missing
 
 
-def test_aggregate_user_user_endpoint(
-    app, db_session, test_user, client, auth_header, respx_mock
-):
-    logged_in_user_data = create_logged_in_user_data(test_user, db_session)
-    create_other_user_data(db_session)
-    # create_mocks_for_fence_user(app, respx_mock)
-
+def test_aggregate_user_user_endpoint(app, client, logged_in_users, auth_header):
     res = client.get("/aggregate/user/user", headers=auth_header)
 
     assert res.status_code == 200
@@ -267,7 +185,9 @@ def test_authorization_url_endpoint(client):
     assert res.location.startswith("https://some.data.commons/user/oauth2/authorize")
 
 
-def test_external_oidc_endpoint(client, test_user, db_session, auth_header):
+def test_external_oidc_endpoint_without_logged_in_users(
+    client, db_session, auth_header
+):
     with open(os.environ["SECRET_CONFIG"], "r") as f:
         configured_oidc = json.load(f)["external_oidc"]
     expected_oidc = {}
@@ -277,7 +197,6 @@ def test_external_oidc_endpoint(client, test_user, db_session, auth_header):
             expected_oidc[idp]["base_url"] = provider["base_url"]
             expected_oidc[idp]["oidc_client_id"] = provider["oidc_client_id"]
 
-    # GET /external_oidc before logging in
     res = client.get("/external_oidc/", headers=auth_header)
     assert res.status_code == 200
     actual_oidc = res.json["providers"]
@@ -295,9 +214,10 @@ def test_external_oidc_endpoint(client, test_user, db_session, auth_header):
         )
         assert provider["refresh_token_expiration"] == None
 
-    create_logged_in_user_data(test_user, db_session)
 
-    # GET /external_oidc after logging in
+def test_external_oidc_endpoint_with_logged_in_users(
+    client, logged_in_users, auth_header
+):
     res = client.get("/external_oidc/", headers=auth_header)
     assert res.status_code == 200
     actual_oidc = res.json["providers"]

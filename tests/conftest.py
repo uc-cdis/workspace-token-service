@@ -20,7 +20,7 @@ from wts.auth_plugins import find_user
 from wts.auth_plugins.base import User
 from wts.api import app as service_app
 from wts.api import _setup
-from wts.models import db as _db
+from wts.models import RefreshToken, db as _db
 
 
 def test_settings():
@@ -53,6 +53,11 @@ def setup_test_database():
 @pytest.fixture(scope="function")
 def test_user():
     return User(userid="test", username="test")
+
+
+@pytest.fixture(scope="function")
+def other_user():
+    return User(userid="123456", username="someone_else")
 
 
 @pytest.fixture(scope="session")
@@ -121,6 +126,64 @@ def auth_header(test_user, rsa_private_key, default_kid):
     )
     encoded_jwt = encoded_jwt.decode("utf-8")
     return [("Authorization", "Bearer {}".format(encoded_jwt))]
+
+
+def insert_into_refresh_token_table(db_session, idp, data):
+    now = int(time.time())
+    db_session.add(
+        RefreshToken(
+            idp=idp,
+            token=data["refresh_token"],
+            username=data["username"],
+            userid=data["userid"],
+            expires=data.get("expires", now + 100),
+            jti=str(uuid.uuid4()),
+        )
+    )
+    db_session.commit()
+
+
+@pytest.fixture(scope="function")
+def logged_in_users(test_user, other_user, db_session):
+    now = int(time.time())
+    refresh_tokens = {
+        "default": [
+            {
+                "username": test_user.username,
+                "userid": test_user.userid,
+                "refresh_token": "eyJhbGciOiJaaaa",
+            },
+            {
+                "username": other_user.username,
+                "userid": other_user.userid,
+                "refresh_token": "eyJhbGciOiJzzzz",
+            },
+        ],
+        "idp_a": [
+            {
+                "username": test_user.username,
+                "userid": test_user.userid,
+                "refresh_token": "eyJhbGciOiJbbbb",
+            },
+            {
+                "username": other_user.username,
+                "userid": other_user.userid,
+                "refresh_token": "eyJhbGciOiJyyyy",
+            },
+        ],
+        "idp_with_expired_token": [
+            {
+                "username": test_user.username,
+                "userid": test_user.userid,
+                "refresh_token": "eyJhbGciOiJcccc",
+                "expires": now - 100,  # expired
+            }
+        ],
+    }
+    for idp, tokens in refresh_tokens.items():
+        for token in tokens:
+            insert_into_refresh_token_table(db_session, idp, token)
+    return refresh_tokens
 
 
 @pytest.fixture(scope="function")
