@@ -144,50 +144,57 @@ def insert_into_refresh_token_table(db_session, idp, data):
 
 
 @pytest.fixture(scope="function")
-def logged_in_users(test_user, other_user, db_session):
+def refresh_tokens(test_user, other_user):
     now = int(time.time())
-    refresh_tokens = {
+    return {
         "default": [
             {
                 "username": test_user.username,
                 "userid": test_user.userid,
-                "refresh_token": "eyJhbGciOiJaaaa",
+                "refresh_token": "eyJhbGciOiJ.1",
             },
             {
                 "username": other_user.username,
                 "userid": other_user.userid,
-                "refresh_token": "eyJhbGciOiJzzzz",
+                "refresh_token": "eyJhbGciOiJ.2",
             },
         ],
         "idp_a": [
             {
                 "username": test_user.username,
                 "userid": test_user.userid,
-                "refresh_token": "eyJhbGciOiJbbbb",
+                "refresh_token": "eyJhbGciOiJ.3",
             },
             {
                 "username": other_user.username,
                 "userid": other_user.userid,
-                "refresh_token": "eyJhbGciOiJyyyy",
+                "refresh_token": "eyJhbGciOiJ.4",
             },
         ],
         "idp_with_expired_token": [
             {
                 "username": test_user.username,
                 "userid": test_user.userid,
-                "refresh_token": "eyJhbGciOiJcccc",
+                "refresh_token": "eyJhbGciOiJ.5",
                 "expires": now - 100,  # expired
             }
         ],
     }
-    for idp, tokens in refresh_tokens.items():
-        for token in tokens:
-            insert_into_refresh_token_table(db_session, idp, token)
-    return refresh_tokens
 
 
 @pytest.fixture(scope="function")
-def mock_requests(app, respx_mock, request, client, default_kid, rsa_public_key):
+def logged_in_users(refresh_tokens, db_session):
+    all_refresh_tokens = refresh_tokens
+    for idp, refresh_tokens in all_refresh_tokens.items():
+        for refresh_token in refresh_tokens:
+            insert_into_refresh_token_table(db_session, idp, refresh_token)
+    return all_refresh_tokens
+
+
+@pytest.fixture(scope="function")
+def mock_requests(
+    app, respx_mock, refresh_tokens, request, client, default_kid, rsa_public_key
+):
     """
     Mock GET requests for:
     - obtaining JWT keys from Fence
@@ -195,6 +202,15 @@ def mock_requests(app, respx_mock, request, client, default_kid, rsa_public_key)
     Mock POST requests for:
     - getting an access token from Fence using a refresh token
     """
+    all_refresh_tokens = refresh_tokens
+    access_token_to_authz_resource = {}
+    for refresh_tokens in all_refresh_tokens.values():
+        for refresh_token in refresh_tokens:
+            content = refresh_token["refresh_token"].split(".")[1]
+            # example: { "access_token_for_eyJhbGciOiJ.1": "/1", ... }
+            access_token_to_authz_resource[
+                f"access_token_for_{refresh_token['refresh_token']}"
+            ] = f"/{content}"
 
     def do_patch():
         def post_fence_token_side_effect(request):
@@ -206,24 +222,23 @@ def mock_requests(app, respx_mock, request, client, default_kid, rsa_public_key)
             )
 
         def get_fence_user_side_effect(request):
-            acl = {
-                "access_token_for_eyJhbGciOiJaaaa": "/a",
-                "access_token_for_eyJhbGciOiJbbbb": "/b",
-                "access_token_for_eyJhbGciOiJcccc": "/c",
-                "access_token_for_eyJhbGciOiJyyyy": "/y",
-                "access_token_for_eyJhbGciOiJzzzz": "/z",
-            }
             access_token = request.headers["Authorization"].split(" ")[1]
-            assert access_token in acl
+            assert access_token in access_token_to_authz_resource
             return httpx.Response(
                 200,
                 json={
-                    "authz": {acl[access_token]: [{"method": "read", "service": "*"}]}
+                    "authz": {
+                        access_token_to_authz_resource[access_token]: [
+                            {"method": "read", "service": "*"}
+                        ]
+                    },
+                    "is_admin": True,
+                    "role": "admin",
                 },
             )
 
         def create_mocks_for_fence_user(app, respx_mock):
-            for idp, idp_config in app.config["OIDC"].items():
+            for idp_config in app.config["OIDC"].values():
                 fence_url = idp_config["api_base_url"].rstrip("/")
 
                 fence_token_url = f"{fence_url}/oauth2/token"

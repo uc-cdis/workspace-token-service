@@ -2,7 +2,7 @@ import asyncio
 import flask
 import httpx
 import time
-from cdiserrors import NotFoundError
+from cdiserrors import NotFoundError, UserError
 
 from ..auth import async_login_required
 from ..models import db, RefreshToken
@@ -13,7 +13,6 @@ blueprint = flask.Blueprint("aggregate", __name__)
 
 
 #  TODO add swagger doc for this endpoint
-#  TODO add tests
 @blueprint.route("/<path:endpoint>", methods=["GET"])
 @async_login_required
 async def get_aggregate_authz(endpoint):
@@ -55,6 +54,7 @@ async def get_aggregate_authz(endpoint):
                     endpoint_url,
                     headers=auth_header,
                 )
+                endpoint_response.raise_for_status()
         except httpx.RequestError as e:
             flask.current_app.logger.error(
                 "Failed to get response from %s.", e.request.url
@@ -66,12 +66,13 @@ async def get_aggregate_authz(endpoint):
                 e.response.status_code,
                 e.request.url,
             )
+            return [commons_hostname, authz_info]
 
         data = endpoint_response.json()
         for filter_parameter in filters:
             if filter_parameter not in data:
                 raise UserError(
-                    "at least one of the provided filters is not a key in the response returned from f{endpoint_url}"
+                    f"at least one of the provided filters is not a key in the response returned from {endpoint_url}"
                 )
 
         if filters:

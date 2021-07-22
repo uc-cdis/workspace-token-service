@@ -94,9 +94,8 @@ def load_settings(app):
                 "state_prefix": state_prefix,
             }
 
-    # TODO possibly use set here
-    app.config["AGGREGATE_ENDPOINT_ALLOWLIST"] = ["/user/user"] + get_var(
-        "AGGREGATE_ENDPOINT_ALLOWLIST", []
+    app.config["AGGREGATE_ENDPOINT_ALLOWLIST"] = set(
+        ["/user/user"] + get_var("AGGREGATE_ENDPOINT_ALLOWLIST", [])
     )
     app.config["SESSION_COOKIE_NAME"] = "wts"
     app.config["SESSION_COOKIE_SECURE"] = True
