@@ -155,11 +155,17 @@ paths:
       summary: Aggregate responses from all linked commons for the given endpoint
       description: >
         Send GET requests to the specified endpoint on all of the current user's linked commons and return an aggregated response.
-        Authentication is performed using an access token supplied in the Authorization header.
-        GET /aggregate/user/user?filters=authz&filters=username could be used to return the example response below
+        Authentication is performed using an access token supplied in the Authorization header. All url query parameters other than
+        filters are passed along to the specified endpoint. GET /aggregate/user/user?filters=authz&filters=username could be used
+        to return the example response below.
       tags:
       - aggregation
       parameters:
+      - name: endpoint
+        required: true
+        in: path
+        description: The endpoint to call for each of the linked commons
+        type: string
       - name: filters
         in: query
         type: array

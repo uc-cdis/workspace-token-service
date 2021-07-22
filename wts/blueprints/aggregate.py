@@ -24,6 +24,8 @@ async def get_aggregate_authz(endpoint):
         )
 
     filters = flask.request.args.getlist("filters")
+    parameters = flask.request.args.to_dict()
+    parameters.pop("filters", None)
 
     refresh_tokens = (
         db.session.query(RefreshToken)
@@ -51,8 +53,7 @@ async def get_aggregate_authz(endpoint):
         try:
             async with httpx.AsyncClient() as client:
                 endpoint_response = await client.get(
-                    endpoint_url,
-                    headers=auth_header,
+                    endpoint_url, headers=auth_header, params=parameters
                 )
                 endpoint_response.raise_for_status()
         except httpx.RequestError as e:
@@ -77,11 +78,10 @@ async def get_aggregate_authz(endpoint):
 
         if filters:
             data = {k: data[k] for k in filters}
-        return [commons_hostname, data]
+        return (commons_hostname, data)
 
     commons_user_info = await asyncio.gather(
         *[get_endpoint(u, rt) for u, rt in aggregate_tokens.items()]
     )
 
-    # TODO will flask.jsonify(commons_user_info) work?
     return flask.jsonify({c: i for c, i in commons_user_info})
