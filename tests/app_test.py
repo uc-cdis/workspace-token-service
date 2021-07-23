@@ -43,17 +43,13 @@ def test_connected_endpoint_with_logged_in_users(client, auth_header, logged_in_
 
 
 def test_token_endpoint_with_default_idp(client, logged_in_users, auth_header):
-    # the token returned for a specific IDP should be created using the
-    # corresponding refresh_token, using the logged in user's username
     res = client.get("/token/?idp=default", headers=auth_header)
-    assert res.status_code == 200
-    assert (
-        res.json["token"]
-        == "access_token_for_" + logged_in_users["default"][0]["refresh_token"]
-    )
+    assert res.status_code == 403
 
 
 def test_token_endpoint_with_idp_a(client, logged_in_users, auth_header):
+    # the token returned for a specific IDP should be created using the
+    # corresponding refresh_token, using the logged in user's username
     res = client.get("/token/?idp=idp_a", headers=auth_header)
     assert res.status_code == 200
     assert (
@@ -63,13 +59,8 @@ def test_token_endpoint_with_idp_a(client, logged_in_users, auth_header):
 
 
 def test_token_endpoint_without_specifying_idp(client, logged_in_users, auth_header):
-    # make sure the IDP we use is "default" when no IDP is requested
     res = client.get("/token/", headers=auth_header)
-    assert res.status_code == 200
-    assert (
-        res.json["token"]
-        == "access_token_for_" + logged_in_users["default"][0]["refresh_token"]
-    )
+    assert res.status_code == 403
 
 
 def test_token_endpoint_with_bogus_idp(client, logged_in_users, auth_header):
