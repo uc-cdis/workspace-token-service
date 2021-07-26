@@ -4,7 +4,7 @@ import httpx
 import time
 from cdiserrors import NotFoundError, UserError
 
-from ..auth import async_login_required
+from ..auth import authenticate
 from ..models import db, RefreshToken
 from ..tokens import async_get_access_token
 
@@ -14,8 +14,8 @@ blueprint = flask.Blueprint("aggregate", __name__)
 
 #  TODO add swagger doc for this endpoint
 @blueprint.route("/<path:endpoint>", methods=["GET"])
-@async_login_required
 async def get_aggregate_authz(endpoint):
+    authenticate(allow_access_token=True)
     # for `GET /aggregate/user/user`, flask sets endpoint to 'user/user'
     endpoint = f"/{endpoint}"
     if endpoint not in flask.current_app.config["AGGREGATE_ENDPOINT_ALLOWLIST"]:
