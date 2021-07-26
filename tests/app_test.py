@@ -109,6 +109,13 @@ def test_aggregate_user_user_endpoint(app, client, logged_in_users, auth_header)
     )
 
 
+def test_aggregate_user_user_endpoint_denies_permission_without_access_token(
+    app, client, logged_in_users
+):
+    res = client.get("/aggregate/user/user")
+    assert res.status_code == 403
+
+
 def test_aggregate_user_user_endpoint_with_filters(
     app, client, logged_in_users, auth_header
 ):
