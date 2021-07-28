@@ -1,3 +1,4 @@
+import flask
 import json
 import mock
 import os
@@ -52,10 +53,14 @@ def test_token_endpoint_with_idp_a(client, logged_in_users, auth_header):
     # corresponding refresh_token, using the logged in user's username
     res = client.get("/token/?idp=idp_a", headers=auth_header)
     assert res.status_code == 200
-    assert (
-        res.json["token"]
-        == "access_token_for_" + logged_in_users["idp_a"][0]["refresh_token"]
+
+    original_refresh_token = str(
+        flask.current_app.encryption_key.decrypt(
+            bytes(logged_in_users["idp_a"][0]["refresh_token"], encoding="utf8")
+        ),
+        encoding="utf8",
     )
+    assert res.json["token"] == f"access_token_for_{original_refresh_token}"
 
 
 def test_token_endpoint_without_specifying_idp(client, logged_in_users, auth_header):
@@ -228,10 +233,15 @@ def test_authorize_endpoint(client, test_user, db_session, auth_header):
     refresh_tokens = db_session.query(RefreshToken).all()
     for t in refresh_tokens:
         assert t.username == test_user.username
+
+        original_refresh_token = str(
+            flask.current_app.encryption_key.decrypt(bytes(t.token, encoding="utf8")),
+            encoding="utf8",
+        )
         if t.idp == "default":
-            assert t.token == fake_tokens["default"]
+            assert original_refresh_token == fake_tokens["default"]
         else:
-            assert t.token == fake_tokens["idp_a"]
+            assert original_refresh_token == fake_tokens["idp_a"]
 
 
 def test_authorization_url_endpoint(client):

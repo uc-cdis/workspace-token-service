@@ -1,5 +1,6 @@
 from alembic.config import main as alembic_main
 from cryptography.fernet import Fernet
+import flask
 import httpx
 import jwt
 import mock
@@ -130,6 +131,12 @@ def auth_header(test_user, rsa_private_key, default_kid):
 
 def insert_into_refresh_token_table(db_session, idp, data):
     now = int(time.time())
+    data["refresh_token"] = str(
+        flask.current_app.encryption_key.encrypt(
+            bytes(data["refresh_token"], encoding="utf8")
+        ),
+        encoding="utf8",
+    )
     db_session.add(
         RefreshToken(
             idp=idp,

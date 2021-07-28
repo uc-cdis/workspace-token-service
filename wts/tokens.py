@@ -11,7 +11,13 @@ from .utils import get_oauth_client
 def get_data_for_fence_request(refresh_token):
     token = refresh_token.token
     if hasattr(flask.current_app, "encryption_key"):
-        token = flask.current_app.encryption_key.decrypt(token)
+        try:
+            token = str(
+                flask.current_app.encryption_key.decrypt(bytes(token, encoding="utf8")),
+                encoding="utf8",
+            )
+        except:
+            pass
     client = get_oauth_client(idp=refresh_token.idp)
     url = client.metadata.get("access_token_url")
     data = {"grant_type": "refresh_token", "refresh_token": token}

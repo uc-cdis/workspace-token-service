@@ -35,7 +35,7 @@ def load_settings(app):
     EXTERNAL_OIDC: config for additional oidc handshakes
     """
     app.secret_key = get_var("SECRET_KEY")
-    app.encrytion_key = Fernet(get_var("ENCRYPTION_KEY"))
+    app.encryption_key = Fernet(get_var("ENCRYPTION_KEY"))
     postgres_creds = get_var("POSTGRES_CREDS_FILE", "")
     if postgres_creds:
         with open(postgres_creds, "r") as f:
