@@ -15,7 +15,6 @@ blueprint = flask.Blueprint("aggregate", __name__)
 #  TODO add swagger doc for this endpoint
 @blueprint.route("/<path:endpoint>", methods=["GET"])
 async def get_aggregate_authz(endpoint):
-    authenticate(allow_access_token=True)
     # for `GET /aggregate/user/user`, flask sets endpoint to 'user/user'
     endpoint = f"/{endpoint}"
     if endpoint not in flask.current_app.config["AGGREGATE_ENDPOINT_ALLOWLIST"]:
@@ -23,65 +22,76 @@ async def get_aggregate_authz(endpoint):
             "supplied endpoint is not configured in the Workspace Token Service aggregate endpoint allowlist"
         )
 
+    if flask.request.headers.get("Authorization"):
+        authenticate(allow_access_token=True)
+        refresh_tokens = (
+            db.session.query(RefreshToken)
+            .filter_by(username=flask.g.user.username)
+            .filter(RefreshToken.expires > int(time.time()))
+            .order_by(RefreshToken.expires.asc())
+        )
+        #  if a user has multiple refresh tokens for the same commons, we want
+        #  the latest one to be used. see
+        #  https://stackoverflow.com/questions/39678672/is-a-python-dict-comprehension-always-last-wins-if-there-are-duplicate-keys
+        refresh_tokens = {
+            flask.current_app.config["OIDC"][rt.idp]["commons_hostname"]: rt
+            for rt in refresh_tokens
+        }
+        access_tokens = await asyncio.gather(
+            *[async_get_access_token(rt) for rt in refresh_tokens.values()]
+        )
+        request_info = [
+            (commons, endpoint, {"Authorization": f"Bearer {access_token}"})
+            if access_token
+            else (commons, None, None)
+            for commons, access_token in access_tokens
+        ]
+    else:
+        request_info = [
+            (commons, endpoint, {})
+            for commons in flask.current_app.config["COMMONS_HOSTNAMES"]
+        ]
+
+    commons_user_info = await asyncio.gather(
+        *[make_request(c, endpoint, headers) for c, endpoint, headers in request_info]
+    )
+
+    return flask.jsonify({c: i for c, i in commons_user_info})
+
+
+async def make_request(commons_hostname, endpoint, headers):
+    if endpoint is None:
+        return [commons_hostname, {}]
+    endpoint_url = f"https://{commons_hostname}{endpoint}"
+
     filters = flask.request.args.getlist("filters")
     parameters = flask.request.args.to_dict()
     parameters.pop("filters", None)
 
-    refresh_tokens = (
-        db.session.query(RefreshToken)
-        .filter_by(username=flask.g.user.username)
-        .filter(RefreshToken.expires > int(time.time()))
-        .order_by(RefreshToken.expires.asc())
-    )
-
-    #  if a user has multiple refresh tokens for the same commons, we want the
-    #  latest one to be used. see https://stackoverflow.com/questions/39678672/is-a-python-dict-comprehension-always-last-wins-if-there-are-duplicate-keys
-    aggregate_tokens = {
-        flask.current_app.config["OIDC"][rt.idp]["commons_hostname"]: rt
-        for rt in refresh_tokens
-    }
-
-    async def get_endpoint(commons_hostname, refresh_token):
-        endpoint_url = f"https://{commons_hostname}{endpoint}"
-
-        authz_info = {}
-        access_token = await async_get_access_token(refresh_token)
-        if not access_token:
-            return [commons_hostname, authz_info]
-        auth_header = {"Authorization": f"Bearer {access_token}"}
-
-        try:
-            async with httpx.AsyncClient() as client:
-                endpoint_response = await client.get(
-                    endpoint_url, headers=auth_header, params=parameters
-                )
-                endpoint_response.raise_for_status()
-        except httpx.RequestError as e:
-            flask.current_app.logger.error(
-                "Failed to get response from %s.", e.request.url
+    try:
+        async with httpx.AsyncClient() as client:
+            endpoint_response = await client.get(
+                endpoint_url, headers=headers, params=parameters
             )
-            return [commons_hostname, authz_info]
-        except httpx.HTTPStatusError as e:
-            flask.current_app.logger.error(
-                "Status code %s returned from %s",
-                e.response.status_code,
-                e.request.url,
+            endpoint_response.raise_for_status()
+    except httpx.RequestError as e:
+        flask.current_app.logger.error("Failed to get response from %s.", e.request.url)
+        return [commons_hostname, {}]
+    except httpx.HTTPStatusError as e:
+        flask.current_app.logger.error(
+            "Status code %s returned from %s",
+            e.response.status_code,
+            e.request.url,
+        )
+        return [commons_hostname, {}]
+
+    data = endpoint_response.json()
+    for filter_parameter in filters:
+        if filter_parameter not in data:
+            raise UserError(
+                f"at least one of the provided filters is not a key in the response returned from {endpoint_url}"
             )
-            return [commons_hostname, authz_info]
 
-        data = endpoint_response.json()
-        for filter_parameter in filters:
-            if filter_parameter not in data:
-                raise UserError(
-                    f"at least one of the provided filters is not a key in the response returned from {endpoint_url}"
-                )
-
-        if filters:
-            data = {k: data[k] for k in filters}
-        return (commons_hostname, data)
-
-    commons_user_info = await asyncio.gather(
-        *[get_endpoint(u, rt) for u, rt in aggregate_tokens.items()]
-    )
-
-    return flask.jsonify({c: i for c, i in commons_user_info})
+    if filters:
+        data = {k: data[k] for k in filters}
+    return (commons_hostname, data)

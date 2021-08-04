@@ -51,6 +51,9 @@ def get_access_token(requested_idp, expires=None):
 
 
 async def async_get_access_token(refresh_token):
+    commons_hostname = flask.current_app.config["OIDC"][refresh_token.idp][
+        "commons_hostname"
+    ]
     try:
         url, data, auth = get_data_for_fence_request(refresh_token)
         async with httpx.AsyncClient() as http_client:
@@ -60,14 +63,14 @@ async def async_get_access_token(refresh_token):
         flask.current_app.logger.error(
             "Failed to POST %s to obtain access token", e.request.url
         )
-        return ""
+        return commons_hostname, ""
     except httpx.HTTPStatusError as e:
         flask.current_app.logger.error(
             "Failed to POST %s to obtain access token. Status code: %s",
             e.request.url,
             e.response.status_code,
         )
-        return ""
+        return commons_hostname, ""
     except:
-        return ""
-    return res.json()["access_token"]
+        return commons_hostname, ""
+    return commons_hostname, res.json()["access_token"]
