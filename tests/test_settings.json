@@ -5,6 +5,7 @@
     "secret_key": "test",
     "sqlalchemy_database_uri": "postgresql://postgres:postgres@localhost:5432/wts_test",
     "wts_base_url": "https://test.workspace.planx-pla.net/wts/",
+    "aggregate_endpoint_allowlist": ["/index/index"],
     "external_oidc": [
         {
             "base_url": "https://some.data.commons",

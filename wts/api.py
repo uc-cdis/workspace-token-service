@@ -98,7 +98,7 @@ def load_settings(app):
         set(config["commons_hostname"] for config in app.config["OIDC"].values())
     )
     app.config["AGGREGATE_ENDPOINT_ALLOWLIST"] = set(
-        ["/authz/mapping"] + get_var("AGGREGATE_ENDPOINT_ALLOWLIST", [])
+        ["/user/user", "/authz/mapping"] + get_var("AGGREGATE_ENDPOINT_ALLOWLIST", [])
     )
     app.config["SESSION_COOKIE_NAME"] = "wts"
     app.config["SESSION_COOKIE_SECURE"] = True

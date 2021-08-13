@@ -114,13 +114,6 @@ def test_aggregate_user_user_endpoint(app, client, logged_in_users, auth_header)
     )
 
 
-def test_aggregate_user_user_endpoint_denies_permission_without_access_token(
-    app, client, logged_in_users
-):
-    res = client.get("/aggregate/user/user")
-    assert res.status_code == 403
-
-
 def test_aggregate_user_user_endpoint_with_filters(
     app, client, logged_in_users, auth_header
 ):
@@ -172,6 +165,27 @@ def test_aggregate_endpoint_when_one_linked_commons_returns_500(
 
     idp_a_commons_hostname = app.config["OIDC"]["idp_a"]["commons_hostname"]
     assert res.json[idp_a_commons_hostname] == {}
+
+
+def test_aggregate_endpoint_with_anonymous_request(
+    app, client, logged_in_users, respx_mock
+):
+    commons_hostnames = app.config["COMMONS_HOSTNAMES"]
+    for commons_hostname in commons_hostnames:
+        respx_mock.get(f"https://{commons_hostname}/index/index").mock(
+            return_value=httpx.Response(
+                200, json={"records": [{"did": str(uuid.uuid4())}]}
+            )
+        )
+
+    res = client.get("/aggregate/index/index")
+    assert res.status_code == 200
+    assert len(res.json) == len(commons_hostnames)
+    for commons_hostname in commons_hostnames:
+        assert commons_hostname in res.json
+        assert list(res.json[commons_hostname].keys()) == ["records"]
+        assert len(res.json[commons_hostname]["records"]) == 1
+        assert list(res.json[commons_hostname]["records"][0].keys()) == ["did"]
 
 
 def test_aggregate_with_endpoint_not_in_allowlist(client, auth_header):

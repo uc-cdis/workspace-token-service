@@ -22,6 +22,10 @@ async def get_aggregate_authz(endpoint):
             "supplied endpoint is not configured in the Workspace Token Service aggregate endpoint allowlist"
         )
 
+    filters = flask.request.args.getlist("filters")
+    parameters = flask.request.args.to_dict()
+    parameters.pop("filters", None)
+
     if flask.request.headers.get("Authorization"):
         authenticate(allow_access_token=True)
         refresh_tokens = (
@@ -53,20 +57,19 @@ async def get_aggregate_authz(endpoint):
         ]
 
     commons_user_info = await asyncio.gather(
-        *[make_request(c, endpoint, headers) for c, endpoint, headers in request_info]
+        *[
+            make_request(commons, endpoint, headers, parameters, filters)
+            for commons, endpoint, headers in request_info
+        ]
     )
 
     return flask.jsonify({c: i for c, i in commons_user_info})
 
 
-async def make_request(commons_hostname, endpoint, headers):
+async def make_request(commons_hostname, endpoint, headers, parameters, filters):
     if endpoint is None:
         return [commons_hostname, {}]
     endpoint_url = f"https://{commons_hostname}{endpoint}"
-
-    filters = flask.request.args.getlist("filters")
-    parameters = flask.request.args.to_dict()
-    parameters.pop("filters", None)
 
     try:
         async with httpx.AsyncClient() as client:
