@@ -27,12 +27,8 @@ def get_access_token(requested_idp, expires=None):
     if refresh_token.expires <= now:
         raise AuthError("your refresh token is expired, please login again")
     token = refresh_token.token
-    try:
-        token_bytes = bytes(token, encoding="utf-8")
-        token = flask.current_app.encryption_key.decrypt(token_bytes).decode("utf-8")
-    except Exception as e:
-        flask.current_app.logger.error(f"Unable to decrypt refresh token: {e}")
-        raise
+    token_bytes = bytes(token, encoding="utf-8")
+    token = flask.current_app.encryption_key.decrypt(token_bytes).decode("utf-8")
     data = {"grant_type": "refresh_token", "refresh_token": token}
     auth = (client.client_id, client.client_secret)
     try:

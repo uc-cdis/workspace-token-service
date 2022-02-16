@@ -205,13 +205,12 @@ def test_authorize_endpoint(app, client, test_user, db_session, auth_header):
     refresh_tokens = db_session.query(RefreshToken).all()
     for t in refresh_tokens:
         assert t.username == test_user.username
-        if t.idp == "default":
-            expected_token = fake_tokens["default"]
-        else:
-            expected_token = fake_tokens["idp_a"]
         db_token_bytes = bytes(t.token, encoding="utf-8")
         db_token = app.encryption_key.decrypt(db_token_bytes).decode("utf-8")
-        assert db_token == expected_token
+        if t.idp == "default":
+            assert db_token == fake_tokens["default"]
+        else:
+            assert db_token == fake_tokens["idp_a"]
 
 
 def test_authorization_url_endpoint(client):
