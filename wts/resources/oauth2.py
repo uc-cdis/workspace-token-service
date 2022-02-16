@@ -23,7 +23,7 @@ def client_do_authorize():
         raise AuthError("could not authorize; state did not match across auth requests")
     try:
         tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
-        return refresh_refresh_token(tokens, requested_idp)
+        refresh_refresh_token(tokens, requested_idp)
     except KeyError as e:
         raise AuthError("error in token response: {}".format(tokens))
     except AuthlibBaseError as e:
@@ -75,7 +75,7 @@ def refresh_refresh_token(tokens, idp):
     if hasattr(flask.current_app, "encryption_key"):
         refresh_token = flask.current_app.encryption_key.encrypt(
             bytes(refresh_token, encoding="utf8")
-        )
+        ).decode("utf8")
 
     # get the username of the current logged in user.
     # `current_user` validates the token and relies on `OIDC_ISSUER`
@@ -100,4 +100,3 @@ def refresh_refresh_token(tokens, idp):
     )
     db.session.add(new_token)
     db.session.commit()
-    return refresh_token
