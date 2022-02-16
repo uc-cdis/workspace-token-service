@@ -72,10 +72,9 @@ def refresh_refresh_token(tokens, idp):
             "Refreshing token, purging {}".format(old_token.jti)
         )
         db.session.delete(old_token)
-    if hasattr(flask.current_app, "encryption_key"):
-        refresh_token = flask.current_app.encryption_key.encrypt(
-            bytes(refresh_token, encoding="utf8")
-        ).decode("utf8")
+    refresh_token = flask.current_app.encryption_key.encrypt(
+        bytes(refresh_token, encoding="utf8")
+    ).decode("utf8")
 
     # get the username of the current logged in user.
     # `current_user` validates the token and relies on `OIDC_ISSUER`
