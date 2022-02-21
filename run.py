@@ -1,6 +1,6 @@
-from wts.api import run_for_development
+from wts.api import app
 
 
 if __name__ == "__main__":
 
-    run_for_development(debug=True, threaded=True)
+    app.run(debug=True)
