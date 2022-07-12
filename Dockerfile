@@ -20,7 +20,8 @@ WORKDIR /$appname
 
 RUN python -m pip install --upgrade pip \
     && pip install pipenv \
-    && python -m pipenv install --system --deploy --ignore-pipfile \
+    && pipenv lock \
+    && python -m pipenv install --system --deploy \
     && pip freeze
 
 RUN mkdir -p /var/www/$appname \
