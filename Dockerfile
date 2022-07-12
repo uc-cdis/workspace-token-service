@@ -7,7 +7,6 @@ FROM quay.io/cdis/python:pybase3-2.0.1
 
 ENV appname=wts
 
-
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     libmcrypt4 libmhash2 mcrypt \
