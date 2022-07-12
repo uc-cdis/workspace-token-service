@@ -26,8 +26,8 @@ psycopg2 = "~=2.7"
 python-jose = "~=3.0"
 kubernetes = "~=11.0.0"
 pyyaml = "~=5.4.1"
-authutils = "~=5.0.4"
 httpx = "~=0.18.2"
+authutils = "~=5.0.5"
 
 [requires]
 python_version = "3.7"

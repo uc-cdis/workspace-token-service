@@ -2,16 +2,17 @@
 # To check running container: docker exec -it wts /bin/bash
 
 
-FROM quay.io/cdis/python3.7-nginx:feat_add-python3.7-alpine-image
+FROM quay.io/cdis/python:pybase3-2.0.1
 
 
 ENV appname=wts
 
 
-RUN apk update \
-    && apk add postgresql-libs postgresql-dev libffi-dev libressl-dev \
-    && apk add linux-headers musl-dev gcc g++ \
-    && apk add curl bash git vim
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    libmcrypt4 libmhash2 mcrypt \
+    curl bash git vim \
+    && apt-get clean
 
 COPY . /$appname
 COPY ./deployment/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
@@ -20,7 +21,6 @@ WORKDIR /$appname
 
 RUN python -m pip install --upgrade pip \
     && pip install pipenv \
-    && pipenv lock \
     && python -m pipenv install --system --deploy \
     && pip freeze
 
