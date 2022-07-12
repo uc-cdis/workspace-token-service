@@ -26,20 +26,11 @@ def get_data_for_fence_request(refresh_token):
 
 
 def get_access_token(requested_idp, expires=None):
-<<<<<<< HEAD
     if requested_idp not in flask.current_app.oauth2_clients:
         raise UserError('Requested IDP "{}" is not configured'.format(requested_idp))
-=======
-    client = get_oauth_client(idp=requested_idp)
-    now = int(time.time())
-    username = flask.g.user.username
-    flask.current_app.logger.info(
-        "Getting refresh token for user '{}', IDP '{}'".format(username, requested_idp)
-    )
->>>>>>> master
     refresh_token = (
         db.session.query(RefreshToken)
-        .filter_by(username=username)
+        .filter_by(username=flask.g.user.username)
         .filter_by(idp=requested_idp)
         .order_by(RefreshToken.expires.desc())
         .first()
@@ -49,15 +40,7 @@ def get_access_token(requested_idp, expires=None):
         raise AuthError("User doesn't have a refresh token")
     if refresh_token.expires <= now:
         raise AuthError("your refresh token is expired, please login again")
-<<<<<<< HEAD
     url, data, auth = get_data_for_fence_request(refresh_token)
-=======
-    token = refresh_token.token
-    token_bytes = bytes(token, encoding="utf-8")
-    token = flask.current_app.encryption_key.decrypt(token_bytes).decode("utf-8")
-    data = {"grant_type": "refresh_token", "refresh_token": token}
-    auth = (client.client_id, client.client_secret)
->>>>>>> master
     try:
         r = httpx.post(url, data=data, auth=auth)
     except Exception:

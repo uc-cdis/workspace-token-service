@@ -23,7 +23,7 @@ def client_do_authorize():
         raise AuthError("could not authorize; state did not match across auth requests")
     try:
         tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
-        refresh_refresh_token(tokens, requested_idp)
+        return refresh_refresh_token(tokens, requested_idp)
     except KeyError as e:
         raise AuthError("error in token response: {}".format(tokens))
     except AuthlibBaseError as e:
@@ -103,3 +103,4 @@ def refresh_refresh_token(tokens, idp):
     )
     db.session.add(new_token)
     db.session.commit()
+    return refresh_token
