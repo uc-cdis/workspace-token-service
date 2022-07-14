@@ -29,9 +29,10 @@ kubernetes = "~=11.0.0"
 pyyaml = "~=5.4.1"
 httpx = "~=0.18.2"
 authutils = "~=5.0.5"
+pipfile = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.9"
 
 [pipenv]
 allow_prereleases = true
