@@ -15,6 +15,7 @@ respx = ">=0.17.1"
 
 [packages]
 alembic = ">=1.4.1"
+requests = "*"
 flask-cors = "~=3.0"
 cdiserrors = "~=1.0"
 cdislogging = "~=1.0"

@@ -1,17 +1,15 @@
 # To run: docker run -v /path/to/wsgi.py:/var/www/wts/wsgi.py --name=wts -p 81:80 wts
 # To check running container: docker exec -it wts /bin/bash
 
-
 FROM quay.io/cdis/python:python3.9-buster-2.0.0
 
 
 ENV appname=wts
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-    libmcrypt4 libmhash2 mcrypt \
-    curl bash git vim \
-    && apt-get clean
+RUN apk update \
+    && apk add postgresql-libs postgresql-dev libffi-dev libressl-dev \
+    && apk add linux-headers musl-dev gcc g++ \
+    && apk add curl bash git vim
 
 COPY . /$appname
 COPY ./deployment/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
@@ -20,7 +18,7 @@ WORKDIR /$appname
 
 RUN python -m pip install --upgrade pip \
     && pip install pipenv \
-    && python -m pipenv install --system --deploy \
+    && python -m pipenv install --system --deploy --ignore-pipfile \
     && pip freeze
 
 RUN mkdir -p /var/www/$appname \

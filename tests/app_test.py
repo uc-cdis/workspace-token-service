@@ -13,7 +13,7 @@ from wts.resources.oauth2 import find_valid_refresh_token
 
 
 def test_find_valid_refresh_token(logged_in_users):
-    
+
     # valid refresh token
     idp = "idp_a"
     username = logged_in_users[idp][0]["username"]
@@ -233,7 +233,7 @@ def test_authorize_endpoint(client, test_user, db_session, auth_header):
     refresh_tokens = db_session.query(RefreshToken).all()
     for t in refresh_tokens:
         assert t.username == test_user.username
-        
+
         original_refresh_token = str(
             flask.current_app.encryption_key.decrypt(bytes(t.token, encoding="utf8")),
             encoding="utf8",
