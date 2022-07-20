@@ -20,7 +20,7 @@ from authutils.testing.fixtures import (
 from wts.auth_plugins import find_user
 from wts.auth_plugins.base import User
 from wts.api import app as service_app
-from wts.api import _setup
+from wts.api import setup_app
 from wts.models import RefreshToken, db as _db
 
 
@@ -38,7 +38,7 @@ def app():
     test_settings()
     setup_test_database()
     with service_app.app_context():
-        _setup(service_app)
+        setup_app(service_app)
     return service_app
 
 

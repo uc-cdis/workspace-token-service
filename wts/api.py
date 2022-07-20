@@ -119,14 +119,8 @@ def _log_and_jsonify_exception(e):
 app.register_error_handler(APIError, _log_and_jsonify_exception)
 
 
-@app.before_first_request
-def setup():
-    _setup(app)
-
-
-def _setup(app):
+def setup_app(app):
     load_settings(app)
-    print(app.registered)
     app.oauth2_clients = {
         idp: OAuth2Session(**conf) for idp, conf in app.config["OIDC"].items()
     }
@@ -135,12 +129,10 @@ def _setup(app):
         "Aggregate endpoint allowlist: %s", app.config["AGGREGATE_ENDPOINT_ALLOWLIST"]
     )
     db.init_app(app)
-    if not app.registered:
-        app.register_blueprint(oauth2.blueprint, url_prefix="/oauth2")
-        app.register_blueprint(tokens.blueprint, url_prefix="/token")
-        app.register_blueprint(external_oidc.blueprint, url_prefix="/external_oidc")
-        app.register_blueprint(aggregate.blueprint, url_prefix="/aggregate")
-        app.registered = True
+    app.register_blueprint(oauth2.blueprint, url_prefix="/oauth2")
+    app.register_blueprint(tokens.blueprint, url_prefix="/token")
+    app.register_blueprint(external_oidc.blueprint, url_prefix="/external_oidc")
+    app.register_blueprint(aggregate.blueprint, url_prefix="/aggregate")
 
 
 @app.route("/_status", methods=["GET"])
