@@ -16,7 +16,6 @@ from .version_data import VERSION, COMMIT
 
 app = Flask(__name__)
 app.logger = get_logger(__name__, log_level="info")
-app.registered = False
 
 
 def load_settings(app):
