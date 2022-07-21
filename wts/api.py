@@ -118,12 +118,7 @@ def _log_and_jsonify_exception(e):
 app.register_error_handler(APIError, _log_and_jsonify_exception)
 
 
-@app.before_first_request
-def setup():
-    _setup(app)
-
-
-def _setup(app):
+def setup_app(app):
     load_settings(app)
     app.oauth2_clients = {
         idp: OAuth2Session(**conf) for idp, conf in app.config["OIDC"].items()

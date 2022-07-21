@@ -156,8 +156,10 @@ paths:
       description: >
         Send GET requests to the specified endpoint on all of the current user's linked commons and return an aggregated response.
         Authentication is performed using an access token supplied in the Authorization header. All url query parameters other than
-        filters are passed along to the specified endpoint. GET /aggregate/user/user?filters=authz&filters=username could be used
-        to return the example response below.
+        filters are passed along to the specified endpoint.
+
+
+        `GET /aggregate/user/user?filters=authz&filters=username` could be used to return the example response below.
       tags:
       - aggregation
       parameters:

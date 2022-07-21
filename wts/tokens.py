@@ -50,6 +50,7 @@ def get_access_token(requested_idp, expires=None):
     return r.json()["access_token"]
 
 
+# TODO: Need to handle the expired refresh token scenario
 async def async_get_access_token(refresh_token):
     try:
         url, data, auth = get_data_for_fence_request(refresh_token)

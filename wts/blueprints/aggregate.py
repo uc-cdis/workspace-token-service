@@ -12,9 +12,16 @@ from ..tokens import async_get_access_token
 blueprint = flask.Blueprint("aggregate", __name__)
 
 
-#  TODO add swagger doc for this endpoint
 @blueprint.route("/<path:endpoint>", methods=["GET"])
-async def get_aggregate_authz(endpoint):
+async def get_aggregate_response(endpoint):
+    """
+    Send GET requests to the specified endpoint on all of the current user's linked commons and return an aggregated response.
+    Authentication is performed using an access token supplied in the Authorization header. All url query parameters other than
+    filters are passed along to the specified endpoint. `GET /aggregate/user/user?filters=authz&filters=username`
+
+    To reduce the size of the aggregated response body, only return JSON key-value pairs whose key is in filters. Multiple filters
+    can be specified by repeating the filters in the URL
+    """
     authenticate(allow_access_token=True)
     # for `GET /aggregate/user/user`, flask sets endpoint to 'user/user'
     endpoint = f"/{endpoint}"
