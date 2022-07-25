@@ -6,10 +6,10 @@ FROM quay.io/cdis/python:python3.9-buster-2.0.0
 
 ENV appname=wts
 
-RUN apk update \
-    && apk add postgresql-libs postgresql-dev libffi-dev libressl-dev \
-    && apk add linux-headers musl-dev gcc g++ \
-    && apk add curl bash git vim
+RUN apt-get update \
+    && apt-get install postgresql-libs postgresql-dev libffi-dev libressl-dev \
+    && apt-get install linux-headers musl-dev gcc g++ \
+    && apt-get install curl bash git vim
 
 COPY . /$appname
 COPY ./deployment/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
