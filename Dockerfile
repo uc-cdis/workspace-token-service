@@ -6,20 +6,14 @@ FROM quay.io/cdis/python:python3.9-buster-2.0.0
 
 ENV appname=wts
 
-RUN apt-get update \
-    && apt-get install postgresql-libs postgresql-dev libffi-dev libressl-dev \
-    && apt-get install linux-headers musl-dev gcc g++ \
-    && apt-get install curl bash git vim
-
 COPY . /$appname
 COPY ./deployment/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
 COPY ./deployment/uwsgi/wsgi.py /$appname/wsgi.py
 WORKDIR /$appname
 
-RUN python -m pip install --upgrade pip \
-    && pip install pipenv \
-    && python -m pipenv install --system --deploy --ignore-pipfile \
-    && pip freeze
+RUN pip install --upgrade pip \
+    && pip install --upgrade pipenv \
+    && pipenv install --system --deploy --ignore-pipfile
 
 RUN mkdir -p /var/www/$appname \
     && mkdir -p /var/www/.cache/Python-Eggs/ \
