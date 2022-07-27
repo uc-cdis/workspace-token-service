@@ -54,6 +54,9 @@ async def get_aggregate_response(endpoint):
         authz_info = {}
         access_token = await async_get_access_token(refresh_token)
         if not access_token:
+            flask.current_app.logger.info(
+                f"Access token missing for commons - {commons_hostname}"
+            )
             return [commons_hostname, authz_info]
         auth_header = {"Authorization": f"Bearer {access_token}"}
 
