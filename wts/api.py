@@ -95,7 +95,7 @@ def load_settings(app):
             }
 
     app.config["AGGREGATE_ENDPOINT_ALLOWLIST"] = set(
-        ["/user/user"] + get_var("AGGREGATE_ENDPOINT_ALLOWLIST", [])
+        ["/user/user", "/authz/mapping"] + get_var("AGGREGATE_ENDPOINT_ALLOWLIST", [])
     )
     app.config["SESSION_COOKIE_NAME"] = "wts"
     app.config["SESSION_COOKIE_SECURE"] = True
