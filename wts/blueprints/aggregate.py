@@ -29,7 +29,7 @@ async def get_aggregate_response(endpoint):
         raise NotFoundError(
             "supplied endpoint is not configured in the Workspace Token Service aggregate endpoint allowlist"
         )
-
+    flask.current_app.logger.info(f"Sending an agg request to - {endpoint}")
     filters = flask.request.args.getlist("filters")
     parameters = flask.request.args.to_dict()
     parameters.pop("filters", None)
@@ -47,6 +47,9 @@ async def get_aggregate_response(endpoint):
         flask.current_app.config["OIDC"][rt.idp]["commons_hostname"]: rt
         for rt in refresh_tokens
     }
+    flask.current_app.logger.info(
+        f"The agg tokens for all the commons are - {aggregate_tokens}"
+    )
 
     async def get_endpoint(commons_hostname, refresh_token):
         endpoint_url = f"https://{commons_hostname}{endpoint}"
