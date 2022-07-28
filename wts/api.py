@@ -94,6 +94,9 @@ def load_settings(app):
                 "state_prefix": state_prefix,
             }
 
+    app.config["COMMONS_HOSTNAMES"] = list(
+        set(config["commons_hostname"] for config in app.config["OIDC"].values())
+    )
     app.config["AGGREGATE_ENDPOINT_ALLOWLIST"] = set(
         ["/user/user", "/authz/mapping"] + get_var("AGGREGATE_ENDPOINT_ALLOWLIST", [])
     )
