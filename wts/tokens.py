@@ -25,7 +25,7 @@ def get_data_for_fence_request(refresh_token):
     return url, data, auth
 
 
-def get_access_token(requested_idp, expires=None):
+def get_access_token(requested_idp):
     if requested_idp not in flask.current_app.oauth2_clients:
         raise UserError('Requested IDP "{}" is not configured'.format(requested_idp))
     refresh_token = (
