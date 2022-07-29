@@ -1,5 +1,4 @@
 import flask
-import traceback
 
 from ..auth import authenticate
 from ..tokens import get_access_token

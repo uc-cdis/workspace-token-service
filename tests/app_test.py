@@ -35,7 +35,6 @@ def test_find_valid_refresh_token(logged_in_users):
 
 def test_connected_endpoint_without_logged_in_users(client, db_session, auth_header):
     res = client.get("/oauth2/connected", headers=auth_header)
-    print("res: test_connected_endpoint_without_logged_in_users", res)
     assert res.status_code == 403
 
 

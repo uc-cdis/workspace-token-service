@@ -19,13 +19,9 @@ def get_data_for_fence_request(refresh_token):
         except:
             pass
     client = get_oauth_client(idp=refresh_token.idp)
-    flask.current_app.logger.info(f"oidc client metadata -- {client.metadata} ")
     url = client.metadata.get("access_token_url")
     data = {"grant_type": "refresh_token", "refresh_token": token}
     auth = (client.client_id, client.client_secret)
-    flask.current_app.logger.info(
-        f"The values of the request are url - {url}, data-{data}, auth-{auth} "
-    )
     return url, data, auth
 
 

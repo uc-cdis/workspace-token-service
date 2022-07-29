@@ -28,7 +28,7 @@ async def get_aggregate_response(endpoint):
         raise NotFoundError(
             "supplied endpoint is not configured in the Workspace Token Service aggregate endpoint allowlist"
         )
-    flask.current_app.logger.info(f"Sending an agg request to - {endpoint}")
+
     filters = flask.request.args.getlist("filters")
     parameters = flask.request.args.to_dict()
     parameters.pop("filters", None)
