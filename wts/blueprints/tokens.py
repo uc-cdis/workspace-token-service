@@ -21,4 +21,4 @@ def get_token():
         except ValueError:
             return flask.jsonify({"error": "expires has to be an integer"}), 400
 
-    return flask.jsonify({"token": get_access_token(requested_idp, expires=expires)})
+    return flask.jsonify({"token": get_access_token(requested_idp)})
