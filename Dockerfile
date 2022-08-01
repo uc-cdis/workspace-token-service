@@ -16,7 +16,7 @@ RUN pip install --upgrade poetry
 
 COPY poetry.lock pyproject.toml /$appname/
 RUN poetry config virtualenvs.create false \
-    && poetry install -vv --no-root --no-dev --no-interaction \
+    && poetry install -vv --no-dev --no-interaction \
     && poetry show -v
 
 RUN mkdir -p /var/www/$appname \
