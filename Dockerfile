@@ -1,28 +1,19 @@
 # To run: docker run -v /path/to/wsgi.py:/var/www/wts/wsgi.py --name=wts -p 81:80 wts
 # To check running container: docker exec -it wts /bin/bash
 
-
-FROM quay.io/cdis/python:pybase3-2.0.1
+FROM quay.io/cdis/python:python3.9-buster-2.0.0
 
 
 ENV appname=wts
-
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-    libmcrypt4 libmhash2 mcrypt \
-    curl bash git vim \
-    && apt-get clean
 
 COPY . /$appname
 COPY ./deployment/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
 COPY ./deployment/uwsgi/wsgi.py /$appname/wsgi.py
 WORKDIR /$appname
 
-RUN python -m pip install --upgrade pip \
-    && pip install pipenv \
-    && python -m pipenv install --system --deploy \
-    && pip freeze
+RUN pip install --upgrade pip \
+    && pip install --upgrade pipenv \
+    && pipenv install --system --deploy --ignore-pipfile
 
 RUN mkdir -p /var/www/$appname \
     && mkdir -p /var/www/.cache/Python-Eggs/ \
