@@ -75,7 +75,7 @@ async def get_aggregate_response(endpoint):
 
 async def make_request(commons_hostname, endpoint, headers, parameters, filters):
     if endpoint is None:
-        return [commons_hostname, {}]
+        return (commons_hostname, {})
     endpoint_url = f"https://{commons_hostname}{endpoint}"
 
     try:
@@ -86,14 +86,14 @@ async def make_request(commons_hostname, endpoint, headers, parameters, filters)
             endpoint_response.raise_for_status()
     except httpx.RequestError as e:
         flask.current_app.logger.error("Failed to get response from %s.", e.request.url)
-        return [commons_hostname, {}]
+        return (commons_hostname, {})
     except httpx.HTTPStatusError as e:
         flask.current_app.logger.error(
             "Status code %s returned from %s",
             e.response.status_code,
             e.request.url,
         )
-        return [commons_hostname, {}]
+        return (commons_hostname, {})
 
     data = endpoint_response.json()
     for filter_parameter in filters:
