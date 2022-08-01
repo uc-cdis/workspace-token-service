@@ -11,9 +11,13 @@ COPY ./deployment/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
 COPY ./deployment/uwsgi/wsgi.py /$appname/wsgi.py
 WORKDIR /$appname
 
-RUN pip install --upgrade pip \
-    && pip install --upgrade pipenv \
-    && pipenv install --system --deploy --ignore-pipfile
+RUN pip install --upgrade pip
+RUN pip install --upgrade poetry
+
+COPY poetry.lock pyproject.toml /$appname/
+RUN poetry config virtualenvs.create false \
+    && poetry install -vv --no-root --no-dev --no-interaction \
+    && poetry show -v
 
 RUN mkdir -p /var/www/$appname \
     && mkdir -p /var/www/.cache/Python-Eggs/ \
@@ -28,10 +32,6 @@ RUN mkdir -p /var/www/$appname \
 RUN touch /root/.netrc && chmod -R a+rX /root
 
 EXPOSE 80
-
-RUN COMMIT=`git rev-parse HEAD` && echo "COMMIT=\"${COMMIT}\"" >$appname/version_data.py \
-    && VERSION=`git describe --always --tags` && echo "VERSION=\"${VERSION}\"" >>$appname/version_data.py \
-    && python setup.py install
 
 WORKDIR /var/www/$appname
 
