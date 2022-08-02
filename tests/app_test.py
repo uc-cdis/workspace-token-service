@@ -12,11 +12,11 @@ from wts.models import RefreshToken
 from wts.resources.oauth2 import find_valid_refresh_token
 
 
-def test_find_valid_refresh_token(logged_in_users):
+def test_find_valid_refresh_token(persisted_refresh_tokens):
 
     # valid refresh token
     idp = "idp_a"
-    username = logged_in_users[idp][0]["username"]
+    username = persisted_refresh_tokens[idp][0]["username"]
     assert find_valid_refresh_token(username, idp)
 
     # expired refresh token
@@ -33,47 +33,48 @@ def test_find_valid_refresh_token(logged_in_users):
     assert not find_valid_refresh_token(username, idp)
 
 
-def test_connected_endpoint_without_logged_in_users(client, db_session, auth_header):
+def test_connected_endpoint_without_persisted_refresh_tokens(
+    client, db_session, auth_header
+):
     res = client.get("/oauth2/connected", headers=auth_header)
     assert res.status_code == 403
 
 
-def test_connected_endpoint_with_logged_in_users(client, auth_header, logged_in_users):
+def test_connected_endpoint_with_persisted_refresh_tokens(
+    client, auth_header, persisted_refresh_tokens
+):
     res = client.get("/oauth2/connected", headers=auth_header)
     assert res.status_code == 200
 
 
-def test_token_endpoint_with_default_idp(client, logged_in_users, auth_header):
+def test_token_endpoint_with_default_idp(client, persisted_refresh_tokens, auth_header):
     res = client.get("/token/?idp=default", headers=auth_header)
     assert res.status_code == 403
 
 
-def test_token_endpoint_with_idp_a(client, logged_in_users, auth_header):
+def test_token_endpoint_with_idp_a(client, persisted_refresh_tokens, auth_header):
     # the token returned for a specific IDP should be created using the
     # corresponding refresh_token, using the logged in user's username
     res = client.get("/token/?idp=idp_a", headers=auth_header)
     assert res.status_code == 200
 
-    original_refresh_token = str(
-        flask.current_app.encryption_key.decrypt(
-            bytes(logged_in_users["idp_a"][0]["refresh_token"], encoding="utf8")
-        ),
-        encoding="utf8",
-    )
+    original_refresh_token = persisted_refresh_tokens["idp_a"][0]["refresh_token"]
     assert res.json["token"] == f"access_token_for_{original_refresh_token}"
 
 
-def test_token_endpoint_without_specifying_idp(client, logged_in_users, auth_header):
+def test_token_endpoint_without_specifying_idp(
+    client, persisted_refresh_tokens, auth_header
+):
     res = client.get("/token/", headers=auth_header)
     assert res.status_code == 403
 
 
-def test_token_endpoint_with_bogus_idp(client, logged_in_users, auth_header):
+def test_token_endpoint_with_bogus_idp(client, persisted_refresh_tokens, auth_header):
     res = client.get("/token/?idp=bogus", headers=auth_header)
     assert res.status_code == 400
 
 
-def test_token_endpoint_without_auth_header(client, logged_in_users):
+def test_token_endpoint_without_auth_header(client, persisted_refresh_tokens):
     res = client.get("/token/")
     assert res.status_code == 403
 
@@ -94,7 +95,9 @@ def assert_authz_mapping_for_test_user_in_idp_a_commons(authz_mapping):
     assert "/5" not in authz_mapping
 
 
-def test_aggregate_user_user_endpoint(app, client, logged_in_users, auth_header):
+def test_aggregate_user_user_endpoint(
+    app, client, persisted_refresh_tokens, auth_header
+):
     res = client.get("/aggregate/user/user", headers=auth_header)
     assert res.status_code == 200
     assert len(res.json) == 2
@@ -115,7 +118,7 @@ def test_aggregate_user_user_endpoint(app, client, logged_in_users, auth_header)
 
 
 def test_aggregate_user_user_endpoint_with_filters(
-    app, client, logged_in_users, auth_header
+    app, client, persisted_refresh_tokens, auth_header
 ):
     res = client.get(
         "/aggregate/user/user?filters=authz&filters=role", headers=auth_header
@@ -141,14 +144,14 @@ def test_aggregate_user_user_endpoint_with_filters(
 
 
 def test_aggregate_user_user_endpoint_with_wrong_filter(
-    app, client, logged_in_users, auth_header
+    app, client, persisted_refresh_tokens, auth_header
 ):
     res = client.get("/aggregate/user/user?filters=wrong", headers=auth_header)
     assert res.status_code == 400
 
 
 def test_aggregate_endpoint_when_one_linked_commons_returns_500(
-    app, client, logged_in_users, auth_header, respx_mock
+    app, client, persisted_refresh_tokens, auth_header, respx_mock
 ):
     idp_a_fence_url = app.config["OIDC"]["idp_a"]["api_base_url"].rstrip("/")
     respx_mock.get(f"{idp_a_fence_url}/user").mock(return_value=httpx.Response(500))
@@ -168,7 +171,7 @@ def test_aggregate_endpoint_when_one_linked_commons_returns_500(
 
 
 def test_aggregate_endpoint_with_anonymous_request(
-    app, client, logged_in_users, respx_mock
+    app, client, persisted_refresh_tokens, respx_mock
 ):
     commons_hostnames = app.config["COMMONS_HOSTNAMES"]
     for commons_hostname in commons_hostnames:
@@ -264,7 +267,7 @@ def test_authorization_url_endpoint(client):
     assert res.location.startswith("https://some.data.commons/user/oauth2/authorize")
 
 
-def test_external_oidc_endpoint_without_logged_in_users(
+def test_external_oidc_endpoint_without_persisted_refresh_tokens(
     client, db_session, auth_header
 ):
     with open(os.environ["SECRET_CONFIG"], "r") as f:
@@ -294,8 +297,8 @@ def test_external_oidc_endpoint_without_logged_in_users(
         assert provider["refresh_token_expiration"] == None
 
 
-def test_external_oidc_endpoint_with_logged_in_users(
-    client, logged_in_users, auth_header
+def test_external_oidc_endpoint_with_persisted_refresh_tokens(
+    client, persisted_refresh_tokens, auth_header
 ):
     res = client.get("/external_oidc/", headers=auth_header)
     assert res.status_code == 200

@@ -14,7 +14,7 @@
             "redirect_uri": "https://workspace.planx-pla.net/wts-callback",
             "login_options": {
                 "idp_a": {
-                  "name": "IDP A", "params": {"idp": "google"}
+                    "name": "IDP A", "params": {"idp": "google"}
                 },
                 "idp_b": {
                     "name": "IDP B",

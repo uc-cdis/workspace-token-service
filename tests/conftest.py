@@ -131,16 +131,14 @@ def auth_header(test_user, rsa_private_key, default_kid):
 
 def insert_into_refresh_token_table(db_session, idp, data):
     now = int(time.time())
-    data["refresh_token"] = str(
-        flask.current_app.encryption_key.encrypt(
-            bytes(data["refresh_token"], encoding="utf8")
-        ),
-        encoding="utf8",
+    token_bytes = bytes(data["refresh_token"], encoding="utf8")
+    encrypted_token = flask.current_app.encryption_key.encrypt(token_bytes).decode(
+        "utf-8"
     )
     db_session.add(
         RefreshToken(
             idp=idp,
-            token=data["refresh_token"],
+            token=encrypted_token,
             username=data["username"],
             userid=data["userid"],
             expires=data.get("expires", now + 100),
@@ -151,7 +149,7 @@ def insert_into_refresh_token_table(db_session, idp, data):
 
 
 @pytest.fixture(scope="function")
-def refresh_tokens(test_user, other_user):
+def refresh_tokens_json(test_user, other_user):
     now = int(time.time())
     return {
         "default": [
@@ -190,17 +188,16 @@ def refresh_tokens(test_user, other_user):
 
 
 @pytest.fixture(scope="function")
-def logged_in_users(refresh_tokens, db_session):
-    all_refresh_tokens = refresh_tokens
-    for idp, refresh_tokens in all_refresh_tokens.items():
+def persisted_refresh_tokens(refresh_tokens_json, db_session):
+    for idp, refresh_tokens in refresh_tokens_json.items():
         for refresh_token in refresh_tokens:
             insert_into_refresh_token_table(db_session, idp, refresh_token)
-    return all_refresh_tokens
+    return refresh_tokens_json
 
 
 @pytest.fixture(scope="function")
 def mock_requests(
-    app, respx_mock, refresh_tokens, request, client, default_kid, rsa_public_key
+    app, respx_mock, refresh_tokens_json, request, client, default_kid, rsa_public_key
 ):
     """
     Mock GET requests for:
@@ -209,9 +206,8 @@ def mock_requests(
     Mock POST requests for:
     - getting an access token from Fence using a refresh token
     """
-    all_refresh_tokens = refresh_tokens
     access_token_to_authz_resource = {}
-    for refresh_tokens in all_refresh_tokens.values():
+    for refresh_tokens in refresh_tokens_json.values():
         for refresh_token in refresh_tokens:
             content = refresh_token["refresh_token"].split(".")[1]
             # example: { "access_token_for_eyJhbGciOiJ.1": "/1", ... }

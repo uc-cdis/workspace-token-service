@@ -1,4 +1,5 @@
 import flask
+import traceback
 
 from ..auth import authenticate
 from ..tokens import get_access_token
@@ -21,4 +22,9 @@ def get_token():
         except ValueError:
             return flask.jsonify({"error": "expires has to be an integer"}), 400
 
-    return flask.jsonify({"token": get_access_token(requested_idp)})
+    try:
+        access_token = get_access_token(requested_idp, expires=expires)
+    except Exception:
+        traceback.print_exc()
+        raise
+    return flask.jsonify({"token": access_token})
