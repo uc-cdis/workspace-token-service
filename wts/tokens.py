@@ -9,6 +9,12 @@ from .utils import get_oauth_client
 
 
 def get_data_for_fence_request(refresh_token):
+    """
+    Given `refresh_token`, prepare data for request to IDP's token endpoint.
+
+    Args:
+        refresh_token (wts.models.RefreshToken): refresh token reference
+    """
     token = refresh_token.token
     token_bytes = bytes(token, encoding="utf-8")
     token = flask.current_app.encryption_key.decrypt(token_bytes).decode("utf-8")
@@ -49,6 +55,12 @@ def get_access_token(requested_idp, expires=None):
 
 
 async def async_get_access_token(refresh_token):
+    """
+    Make an asynchronous request to obtain an access token given 'refresh_token'.
+
+    Args:
+        refresh_token (wts.models.RefreshToken): refresh token reference
+    """
     commons_hostname = flask.current_app.config["OIDC"][refresh_token.idp][
         "commons_hostname"
     ]

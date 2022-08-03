@@ -152,11 +152,12 @@ paths:
                             type: string
   /aggregate/{endpoint}:
     get:
-      summary: Aggregate responses from all linked commons for the given endpoint
+      summary: Proxy GET requests to `endpoint` on each linked commons and return an aggregated response
       description: >
-        Send GET requests to the specified endpoint on all of the current user's linked commons and return an aggregated response.
-        Authentication is performed using an access token supplied in the Authorization header. All url query parameters other than
-        filters are passed along to the specified endpoint.
+        For an authenticated request, each proxied request incudes an access token fetched using the current user's refresh token.
+
+
+        All url query parameters except `filters` are passed along to `endpoint`.
 
 
         `GET /aggregate/user/user?filters=authz&filters=username` could be used to return the example response below.
@@ -166,7 +167,7 @@ paths:
       - name: endpoint
         required: true
         in: path
-        description: The endpoint to call for each of the linked commons
+        description: The endpoint to proxy to for each linked commons
         type: string
       - name: filters
         in: query

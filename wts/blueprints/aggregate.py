@@ -15,12 +15,17 @@ blueprint = flask.Blueprint("aggregate", __name__)
 @blueprint.route("/<path:endpoint>", methods=["GET"])
 async def get_aggregate_response(endpoint):
     """
-    Send GET requests to the specified endpoint on all of the current user's linked commons and return an aggregated response.
-    Authentication is performed using an access token supplied in the Authorization header. All url query parameters other than
-    filters are passed along to the specified endpoint. `GET /aggregate/user/user?filters=authz&filters=username`
+    Proxy GET requests to `endpoint` on each linked commons and return
+    an aggregated response.
 
-    To reduce the size of the aggregated response body, only return JSON key-value pairs whose key is in filters. Multiple filters
-    can be specified by repeating the filters in the URL
+    For an authenticated request, each proxied request incudes an access token
+    fetched using the current user's refresh token.
+
+    The size of the aggregated response body can be reduced by supplying a
+    `filters` parameter. If provided, only return JSON key-value pairs whose
+    key is in `filters`. Multiple filters can be specified:
+
+    `GET /aggregate/user/user?filters=authz&filters=username`
     """
     # for `GET /aggregate/user/user`, flask sets endpoint to 'user/user'
     endpoint = f"/{endpoint}"
@@ -74,6 +79,9 @@ async def get_aggregate_response(endpoint):
 
 
 async def make_request(commons_hostname, endpoint, headers, parameters, filters):
+    """
+    Make an asychronous request to `endpoint` on `commons_hostname`.
+    """
     if endpoint is None:
         return (commons_hostname, {})
     endpoint_url = f"https://{commons_hostname}{endpoint}"
