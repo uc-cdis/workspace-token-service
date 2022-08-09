@@ -1,8 +1,0 @@
-{
-    "hardExcludes": [
-        "thog_config.json",
-        "truffles.json",
-        "Pipfile.lock",
-        "migrations/env.py"
-    ]
-}
