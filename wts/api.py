@@ -97,9 +97,9 @@ def load_settings(app):
     app.config["COMMONS_HOSTNAMES"] = list(
         set(config["commons_hostname"] for config in app.config["OIDC"].values())
     )
-    app.config["AGGREGATE_ENDPOINT_ALLOWLIST"] = get_var(
-        "AGGREGATE_ENDPOINT_ALLOWLIST", []
-    )
+    app.config["AGGREGATE_ENDPOINT_ALLOWLIST"] = [
+        endpoint.rstrip("/") for endpoint in get_var("AGGREGATE_ENDPOINT_ALLOWLIST", [])
+    ]
     app.config["SESSION_COOKIE_NAME"] = "wts"
     app.config["SESSION_COOKIE_SECURE"] = True
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False

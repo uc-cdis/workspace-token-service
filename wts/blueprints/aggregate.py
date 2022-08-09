@@ -28,7 +28,7 @@ async def get_aggregate_response(endpoint):
     `GET /aggregate/user/user?filters=authz&filters=username`
     """
     # for `GET /aggregate/user/user`, flask sets endpoint to 'user/user'
-    endpoint = f"/{endpoint}"
+    endpoint = "/" + endpoint.rstrip("/")
     if endpoint not in flask.current_app.config["AGGREGATE_ENDPOINT_ALLOWLIST"]:
         raise NotFoundError(
             "supplied endpoint is not configured in the Workspace Token Service aggregate endpoint allowlist"
