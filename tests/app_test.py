@@ -167,7 +167,7 @@ def test_aggregate_endpoint_when_one_linked_commons_returns_500(
     )
 
     idp_a_commons_hostname = app.config["OIDC"]["idp_a"]["commons_hostname"]
-    assert res.json[idp_a_commons_hostname] == {}
+    assert res.json[idp_a_commons_hostname] is None
 
 
 def test_aggregate_endpoint_with_anonymous_request(

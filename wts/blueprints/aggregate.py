@@ -82,8 +82,12 @@ async def make_request(commons_hostname, endpoint, headers, parameters, filters)
     """
     Make an asychronous request to `endpoint` on `commons_hostname`.
     """
+
+    # represent failure to get data with `null` JSON value (Python `None` will
+    # be serialized as JSON `null`)
+    failure_indicator = (commons_hostname, None)
     if endpoint is None:
-        return (commons_hostname, {})
+        return failure_indicator
     endpoint_url = f"https://{commons_hostname}{endpoint}"
 
     try:
@@ -94,14 +98,14 @@ async def make_request(commons_hostname, endpoint, headers, parameters, filters)
             endpoint_response.raise_for_status()
     except httpx.RequestError as e:
         flask.current_app.logger.error("Failed to get response from %s.", e.request.url)
-        return (commons_hostname, {})
+        return failure_indicator
     except httpx.HTTPStatusError as e:
         flask.current_app.logger.error(
             "Status code %s returned from %s",
             e.response.status_code,
             e.request.url,
         )
-        return (commons_hostname, {})
+        return failure_indicator
 
     data = endpoint_response.json()
     for filter_parameter in filters:
