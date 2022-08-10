@@ -186,7 +186,7 @@ paths:
           schema:
             type: object
             properties:
-              brh.data-commons.org:
+              client.commons.org:
                 type: object
                 properties:
                   authz:
@@ -203,7 +203,7 @@ paths:
                               type: string
                   username:
                     type: string
-              gen3.theanvil.io:
+              connected.commons.org:
                 type: object
                 properties:
                   authz:
