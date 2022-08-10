@@ -60,7 +60,13 @@ def test_aggregate_user_user_endpoint_with_wrong_filter(
     app, client, persisted_refresh_tokens, auth_header
 ):
     res = client.get("/aggregate/user/user?filters=wrong", headers=auth_header)
-    assert res.status_code == 400
+    assert res.status_code == 200
+
+    default_commons_hostname = app.config["OIDC"]["default"]["commons_hostname"]
+    assert res.json[default_commons_hostname]["wrong"] is None
+
+    idp_a_commons_hostname = app.config["OIDC"]["idp_a"]["commons_hostname"]
+    assert res.json[idp_a_commons_hostname]["wrong"] is None
 
 
 def test_aggregate_endpoint_when_one_linked_commons_returns_500(

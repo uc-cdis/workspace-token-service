@@ -110,14 +110,7 @@ async def make_request(commons_hostname, endpoint, headers, parameters, filters)
         return failure_indicator
 
     data = endpoint_response.json()
-    for filter_parameter in filters:
-        if filter_parameter not in data:
-            raise UserError(
-                "at least one of the provided filters is not a key in the response returned from {}".format(
-                    endpoint_url
-                )
-            )
-
     if filters:
-        data = {k: data[k] for k in filters}
+        data = {f: data[f] if f in data else None for f in filters}
+
     return (commons_hostname, data)
