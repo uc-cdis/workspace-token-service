@@ -1,79 +1,20 @@
+import flask
 import json
 import mock
 import os
 import time
 import uuid
+import urllib
 
 from wts.models import RefreshToken
 from wts.resources.oauth2 import find_valid_refresh_token
 
 
-def insert_into_refresh_token_table(app, db_session, idp, data):
-    token_bytes = bytes(data["refresh_token"], encoding="utf8")
-    encrypted_token = app.encryption_key.encrypt(token_bytes).decode("utf-8")
-    now = int(time.time())
-    db_session.add(
-        RefreshToken(
-            idp=idp,
-            token=encrypted_token,
-            username=data["username"],
-            userid=data["userid"],
-            expires=data.get("expires", now + 100),
-            jti=str(uuid.uuid4()),
-        )
-    )
-    db_session.commit()
-
-
-def create_logged_in_user_data(app, test_user, db_session):
-    now = int(time.time())
-    logged_in_user_data = {
-        "default": {
-            "username": test_user.username,
-            "userid": test_user.userid,
-            "refresh_token": "eyJhbGciOiJaaaa",
-        },
-        "idp_a": {
-            "username": test_user.username,
-            "userid": test_user.userid,
-            "refresh_token": "eyJhbGciOiJbbbb",
-        },
-        "idp_with_expired_token": {
-            "username": test_user.username,
-            "userid": test_user.userid,
-            "refresh_token": "eyJhbGciOiJcccc",
-            "expires": now - 100,  # expired
-        },
-    }
-    for idp, data in logged_in_user_data.items():
-        insert_into_refresh_token_table(app, db_session, idp, data)
-    return logged_in_user_data
-
-
-def create_other_user_data(app, db_session):
-    other_user_data = {
-        "default": {
-            "username": "someone_else",
-            "userid": "123456",
-            "refresh_token": "eyJhbGciOiJzzzz",
-        },
-        "idp_a": {
-            "username": "someone_else",
-            "userid": "123456",
-            "refresh_token": "eyJhbGciOiJyyyy",
-        },
-    }
-    for idp, data in other_user_data.items():
-        insert_into_refresh_token_table(app, db_session, idp, data)
-    return other_user_data
-
-
-def test_find_valid_refresh_token(app, test_user, db_session):
-    logged_in_user_data = create_logged_in_user_data(app, test_user, db_session)
+def test_find_valid_refresh_token(persisted_refresh_tokens):
 
     # valid refresh token
     idp = "idp_a"
-    username = logged_in_user_data[idp]["username"]
+    username = persisted_refresh_tokens[idp][0]["username"]
     assert find_valid_refresh_token(username, idp)
 
     # expired refresh token
@@ -90,76 +31,61 @@ def test_find_valid_refresh_token(app, test_user, db_session):
     assert not find_valid_refresh_token(username, idp)
 
 
-def test_connected_endpoint(app, client, test_user, db_session, auth_header):
+def test_connected_endpoint_without_persisted_refresh_tokens(
+    client, db_session, auth_header
+):
     res = client.get("/oauth2/connected", headers=auth_header)
     assert res.status_code == 403
 
-    create_logged_in_user_data(app, test_user, db_session)
 
+def test_connected_endpoint_with_persisted_refresh_tokens(
+    client, auth_header, persisted_refresh_tokens
+):
     res = client.get("/oauth2/connected", headers=auth_header)
     assert res.status_code == 200
 
 
-def test_token_endpoint_with_default_idp(
-    app, client, test_user, db_session, auth_header
-):
-    logged_in_user_data = create_logged_in_user_data(app, test_user, db_session)
-    create_other_user_data(app, db_session)
-
+def test_token_endpoint_with_default_idp(client, persisted_refresh_tokens, auth_header):
     res = client.get("/token/?idp=default", headers=auth_header)
     assert res.status_code == 403
 
 
-def test_token_endpoint_with_idp_a(app, client, test_user, db_session, auth_header):
-    logged_in_user_data = create_logged_in_user_data(app, test_user, db_session)
-    create_other_user_data(app, db_session)
-
-    # the token returned for a specific IDP should be created using the
+def test_token_endpoint_with_idp_a(client, persisted_refresh_tokens, auth_header):
+    # the token returned for a specific IdP should be created using the
     # corresponding refresh_token, using the logged in user's username
     res = client.get("/token/?idp=idp_a", headers=auth_header)
     assert res.status_code == 200
-    assert (
-        res.json["token"]
-        == "access_token_for_" + logged_in_user_data["idp_a"]["refresh_token"]
-    )
+
+    original_refresh_token = persisted_refresh_tokens["idp_a"][0]["refresh_token"]
+    assert res.json["token"] == f"access_token_for_{original_refresh_token}"
 
 
 def test_token_endpoint_without_specifying_idp(
-    app, client, test_user, db_session, auth_header
+    client, persisted_refresh_tokens, auth_header
 ):
-    logged_in_user_data = create_logged_in_user_data(app, test_user, db_session)
-    create_other_user_data(app, db_session)
-
     res = client.get("/token/", headers=auth_header)
     assert res.status_code == 403
 
 
-def test_token_endpoint_with_bogus_idp(app, client, test_user, db_session, auth_header):
-    logged_in_user_data = create_logged_in_user_data(app, test_user, db_session)
-    create_other_user_data(app, db_session)
-
-    # make sure the IDP we use is "default" when no IDP is requested
+def test_token_endpoint_with_bogus_idp(client, persisted_refresh_tokens, auth_header):
     res = client.get("/token/?idp=bogus", headers=auth_header)
     assert res.status_code == 400
 
 
-def test_token_endpoint_without_auth_header(app, client, test_user, db_session):
-    logged_in_user_data = create_logged_in_user_data(app, test_user, db_session)
-    create_other_user_data(app, db_session)
-
+def test_token_endpoint_without_auth_header(client, persisted_refresh_tokens):
     res = client.get("/token/")
     assert res.status_code == 403
 
 
-def test_authorize_endpoint(app, client, test_user, db_session, auth_header):
+def test_authorize_endpoint(client, test_user, db_session, auth_header):
     fake_tokens = {"default": "eyJhbGciOiJtttt", "idp_a": "eyJhbGciOiJuuuu"}
 
     # mock `fetch_access_token` to avoid external calls
     mocked_response = mock.MagicMock()
     mocked_response.side_effect = [
-        # returned object for IDP "default":
+        # returned object for IdP "default":
         {"refresh_token": fake_tokens["default"], "id_token": "eyJhbGciOiJ"},
-        # returned object for IDP "idp_a":
+        # returned object for IdP "idp_a":
         {"refresh_token": fake_tokens["idp_a"], "id_token": "eyJhbGciOiJ"},
     ]
     patched_fetch_access_token = mock.patch(
@@ -171,19 +97,19 @@ def test_authorize_endpoint(app, client, test_user, db_session, auth_header):
     now = int(time.time())
     mocked_jwt_response = mock.MagicMock()
     mocked_jwt_response.side_effect = [
-        # decoded id_token for IDP "default":
+        # decoded id_token for IdP "default":
         {"context": {"user": {"name": test_user.username}}},
-        # decoded refresh_token for IDP "default":
+        # decoded refresh_token for IdP "default":
         {"jti": str(uuid.uuid4()), "exp": now + 100, "sub": test_user.userid},
-        # decoded id_token for IDP "idp_a":
+        # decoded id_token for IdP "idp_a":
         {"context": {"user": {"name": test_user.username}}},
-        # decoded refresh_token for IDP "idp_a":
+        # decoded refresh_token for IdP "idp_a":
         {"jti": str(uuid.uuid4()), "exp": now + 100, "sub": test_user.userid},
     ]
     patched_jwt_decode = mock.patch("jose.jwt.decode", mocked_jwt_response)
     patched_jwt_decode.start()
 
-    # get refresh token for IDP "default"
+    # get refresh token for IdP "default"
     fake_state = "qwerty"
     with client.session_transaction() as session:
         session["state"] = fake_state
@@ -192,7 +118,7 @@ def test_authorize_endpoint(app, client, test_user, db_session, auth_header):
     )
     assert res.status_code == 200, res.json
 
-    # get refresh token for IDP "idp_a"
+    # get refresh token for IdP "idp_a"
     with client.session_transaction() as session:
         session["state"] = fake_state
         session["idp"] = "idp_a"
@@ -205,12 +131,15 @@ def test_authorize_endpoint(app, client, test_user, db_session, auth_header):
     refresh_tokens = db_session.query(RefreshToken).all()
     for t in refresh_tokens:
         assert t.username == test_user.username
-        db_token_bytes = bytes(t.token, encoding="utf-8")
-        db_token = app.encryption_key.decrypt(db_token_bytes).decode("utf-8")
+
+        original_refresh_token = str(
+            flask.current_app.encryption_key.decrypt(bytes(t.token, encoding="utf8")),
+            encoding="utf8",
+        )
         if t.idp == "default":
-            assert db_token == fake_tokens["default"]
+            assert original_refresh_token == fake_tokens["default"]
         else:
-            assert db_token == fake_tokens["idp_a"]
+            assert original_refresh_token == fake_tokens["idp_a"]
 
 
 def test_authorization_url_endpoint(client):
@@ -219,7 +148,9 @@ def test_authorization_url_endpoint(client):
     assert res.location.startswith("https://some.data.commons/user/oauth2/authorize")
 
 
-def test_external_oidc_endpoint(app, client, test_user, db_session, auth_header):
+def test_external_oidc_endpoint_without_persisted_refresh_tokens(
+    client, db_session, auth_header
+):
     with open(os.environ["SECRET_CONFIG"], "r") as f:
         configured_oidc = json.load(f)["external_oidc"]
     expected_oidc = {}
@@ -229,7 +160,6 @@ def test_external_oidc_endpoint(app, client, test_user, db_session, auth_header)
             expected_oidc[idp]["base_url"] = provider["base_url"]
             expected_oidc[idp]["oidc_client_id"] = provider["oidc_client_id"]
 
-    # GET /external_oidc before logging in
     res = client.get("/external_oidc/", headers=auth_header)
     assert res.status_code == 200
     actual_oidc = res.json["providers"]
@@ -247,16 +177,17 @@ def test_external_oidc_endpoint(app, client, test_user, db_session, auth_header)
         )
         assert provider["refresh_token_expiration"] == None
 
-    create_logged_in_user_data(app, test_user, db_session)
 
-    # GET /external_oidc after logging in
+def test_external_oidc_endpoint_with_persisted_refresh_tokens(
+    client, persisted_refresh_tokens, auth_header
+):
     res = client.get("/external_oidc/", headers=auth_header)
     assert res.status_code == 200
     actual_oidc = res.json["providers"]
     print("Returned providers after logging in: {}".format(actual_oidc))
 
     for provider in actual_oidc:
-        if provider["idp"] == "idp_a":  # test user is logged into this IDP
+        if provider["idp"] == "idp_a":  # test user is logged into this IdP
             assert provider["refresh_token_expiration"] != None
         else:
             assert provider["refresh_token_expiration"] == None

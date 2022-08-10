@@ -1,7 +1,7 @@
 sudo: false
 language: python
 
-python: "3.6"
+python: "3.9"
 
 cache:
   - pip
@@ -12,16 +12,16 @@ services:
 
 # install dependencies
 install:
-  - pip install pipenv
-  - pipenv install --dev
-  - pipenv graph
+  - curl -sSL https://install.python-poetry.org | python -
+  - poetry --version
+  - poetry install -vv
 
 before_script:
   - psql -c 'create database wts_test;' -U postgres
 
 # run tests
 script:
-  - pipenv run pytest -vv --cov=wts --cov-report xml tests
+  - poetry run pytest -vv --cov=wts --cov-report xml tests
 
 after_script:
-  - pipenv run python-codacy-coverage -r coverage.xml
+  - poetry run python-codacy-coverage -r coverage.xml

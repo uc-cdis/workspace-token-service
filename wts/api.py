@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 from cdislogging import get_logger
 from cdiserrors import APIError
 
-from .blueprints import oauth2, tokens, external_oidc
+from .blueprints import oauth2, tokens, external_oidc, aggregate
 from .models import db, Base, RefreshToken
 from .utils import get_config_var as get_var
 from .version_data import VERSION, COMMIT
@@ -57,6 +57,7 @@ def load_settings(app):
     oauth_config = {
         "client_id": get_var("OIDC_CLIENT_ID"),
         "client_secret": get_var("OIDC_CLIENT_SECRET"),
+        "commons_hostname": urlparse(fence_base_url).netloc,
         "api_base_url": fence_base_url,
         "authorize_url": fence_base_url + "oauth2/authorize",
         "access_token_url": fence_base_url + "oauth2/token",
@@ -84,6 +85,7 @@ def load_settings(app):
             app.config["OIDC"][idp] = {
                 "client_id": get_var("OIDC_CLIENT_ID", secret_config=conf),
                 "client_secret": get_var("OIDC_CLIENT_SECRET", secret_config=conf),
+                "commons_hostname": urlparse(fence_base_url).netloc,
                 "api_base_url": fence_base_url,
                 "authorize_url": authorization_url,
                 "access_token_url": fence_base_url + "oauth2/token",
@@ -92,6 +94,12 @@ def load_settings(app):
                 "state_prefix": state_prefix,
             }
 
+    app.config["COMMONS_HOSTNAMES"] = list(
+        set(config["commons_hostname"] for config in app.config["OIDC"].values())
+    )
+    app.config["AGGREGATE_ENDPOINT_ALLOWLIST"] = [
+        endpoint.rstrip("/") for endpoint in get_var("AGGREGATE_ENDPOINT_ALLOWLIST", [])
+    ]
     app.config["SESSION_COOKIE_NAME"] = "wts"
     app.config["SESSION_COOKIE_SECURE"] = True
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -113,21 +121,22 @@ def _log_and_jsonify_exception(e):
 app.register_error_handler(APIError, _log_and_jsonify_exception)
 
 
-@app.before_first_request
-def setup():
-    _setup(app)
-
-
-def _setup(app):
+def setup_app(app):
     load_settings(app)
     app.oauth2_clients = {
         idp: OAuth2Session(**conf) for idp, conf in app.config["OIDC"].items()
     }
     app.logger.info("Set up OIDC clients: {}".format(list(app.oauth2_clients.keys())))
+    app.logger.info(
+        "Aggregate endpoint allowlist: {}".format(
+            app.config["AGGREGATE_ENDPOINT_ALLOWLIST"]
+        )
+    )
     db.init_app(app)
     app.register_blueprint(oauth2.blueprint, url_prefix="/oauth2")
     app.register_blueprint(tokens.blueprint, url_prefix="/token")
     app.register_blueprint(external_oidc.blueprint, url_prefix="/external_oidc")
+    app.register_blueprint(aggregate.blueprint, url_prefix="/aggregate")
 
 
 @app.route("/_status", methods=["GET"])

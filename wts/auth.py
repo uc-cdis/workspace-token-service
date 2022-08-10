@@ -1,5 +1,4 @@
 import flask
-
 from .auth_plugins import find_user
 from cdiserrors import AuthError
 

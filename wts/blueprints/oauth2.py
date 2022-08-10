@@ -87,7 +87,7 @@ def logout_oauth():
 
     NOTE: this endpoint doesn't handle the "idp" parameter for now. If we want
     to allow logging out, we'll have to revoke the token associated with the
-    specified IDP.
+    specified IdP.
     """
     url = urljoin(flask.current_app.config.get("USER_API"), "/oauth2/revoke")
     token = flask.request.form.get("token")

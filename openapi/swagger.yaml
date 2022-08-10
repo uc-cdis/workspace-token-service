@@ -150,4 +150,75 @@ paths:
                             type: string
                           url:
                             type: string
+  /aggregate/{endpoint}:
+    get:
+      summary: Proxy GET requests to `endpoint` on each linked commons and return an aggregated response
+      description: >
+        For an authenticated request, each proxied request incudes an access token fetched using the current user's refresh token.
+
+
+        All url query parameters except `filters` are passed along to `endpoint`.
+
+
+        `GET /aggregate/user/user?filters=authz&filters=username` could be used to return the example response below.
+      tags:
+      - aggregation
+      parameters:
+      - name: endpoint
+        required: true
+        in: path
+        description: The endpoint to proxy to for each linked commons
+        type: string
+      - name: filters
+        in: query
+        type: array
+        description: >
+          To reduce the size of the aggregated response body, only return
+          JSON key-value pairs whose key is in filters. Multiple filters
+          can be specified by repeating the filters in the URL. Nested
+          filters such as "toplevel.nested" are not yet supported.
+        required: false
+        default: []
+        items:
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              client.commons.org:
+                type: object
+                properties:
+                  authz:
+                    type: object
+                    properties:
+                      /programs/DEV/projects/test:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            method:
+                              type: string
+                            service:
+                              type: string
+                  username:
+                    type: string
+              connected.commons.org:
+                type: object
+                properties:
+                  authz:
+                    type: object
+                    properties:
+                      /open:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            method:
+                              type: string
+                            service:
+                              type: string
+                  username:
+                    type: string
 swagger: '2.0'

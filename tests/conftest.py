@@ -1,14 +1,15 @@
 from alembic.config import main as alembic_main
 from cryptography.fernet import Fernet
+import flask
 import httpx
 import jwt
 import mock
 import pytest
-import requests
 import os
 from sqlalchemy.exc import SQLAlchemyError
 import time
 import uuid
+import urllib
 
 from authutils.testing.fixtures import (
     rsa_public_key,
@@ -19,8 +20,8 @@ from authutils.testing.fixtures import (
 from wts.auth_plugins import find_user
 from wts.auth_plugins.base import User
 from wts.api import app as service_app
-from wts.api import _setup
-from wts.models import db as _db
+from wts.api import setup_app
+from wts.models import RefreshToken, db as _db
 
 
 def test_settings():
@@ -37,7 +38,7 @@ def app():
     test_settings()
     setup_test_database()
     with service_app.app_context():
-        _setup(service_app)
+        setup_app(service_app)
     return service_app
 
 
@@ -53,6 +54,11 @@ def setup_test_database():
 @pytest.fixture(scope="function")
 def test_user():
     return User(userid="test", username="test")
+
+
+@pytest.fixture(scope="function")
+def other_user():
+    return User(userid="123456", username="someone_else")
 
 
 @pytest.fixture(scope="session")
@@ -123,66 +129,155 @@ def auth_header(test_user, rsa_private_key, default_kid):
     return [("Authorization", "Bearer {}".format(encoded_jwt))]
 
 
+def insert_into_refresh_token_table(db_session, idp, data):
+    now = int(time.time())
+    token_bytes = bytes(data["refresh_token"], encoding="utf8")
+    encrypted_token = flask.current_app.encryption_key.encrypt(token_bytes).decode(
+        "utf-8"
+    )
+    db_session.add(
+        RefreshToken(
+            idp=idp,
+            token=encrypted_token,
+            username=data["username"],
+            userid=data["userid"],
+            expires=data.get("expires", now + 100),
+            jti=str(uuid.uuid4()),
+        )
+    )
+    db_session.commit()
+
+
 @pytest.fixture(scope="function")
-def mock_requests(request, client, default_kid, rsa_public_key):
+def refresh_tokens_json(test_user, other_user):
+    now = int(time.time())
+    return {
+        "default": [
+            {
+                "username": test_user.username,
+                "userid": test_user.userid,
+                "refresh_token": "eyJhbGciOiJ.1",
+            },
+            {
+                "username": other_user.username,
+                "userid": other_user.userid,
+                "refresh_token": "eyJhbGciOiJ.2",
+            },
+        ],
+        "idp_a": [
+            {
+                "username": test_user.username,
+                "userid": test_user.userid,
+                "refresh_token": "eyJhbGciOiJ.3",
+            },
+            {
+                "username": other_user.username,
+                "userid": other_user.userid,
+                "refresh_token": "eyJhbGciOiJ.4",
+            },
+        ],
+        "idp_with_expired_token": [
+            {
+                "username": test_user.username,
+                "userid": test_user.userid,
+                "refresh_token": "eyJhbGciOiJ.5",
+                "expires": now - 100,  # expired
+            }
+        ],
+    }
+
+
+def assert_authz_mapping_for_test_user_in_default_commons(authz_mapping):
+    assert "/1" in authz_mapping
+    assert "/2" not in authz_mapping
+    assert "/3" not in authz_mapping
+    assert "/4" not in authz_mapping
+    assert "/5" not in authz_mapping
+
+
+def assert_authz_mapping_for_test_user_in_idp_a_commons(authz_mapping):
+    assert "/3" in authz_mapping
+    assert "/1" not in authz_mapping
+    assert "/2" not in authz_mapping
+    assert "/4" not in authz_mapping
+    assert "/5" not in authz_mapping
+
+
+@pytest.fixture(scope="function")
+def persisted_refresh_tokens(refresh_tokens_json, db_session):
+    for idp, refresh_tokens in refresh_tokens_json.items():
+        for refresh_token in refresh_tokens:
+            insert_into_refresh_token_table(db_session, idp, refresh_token)
+    return refresh_tokens_json
+
+
+@pytest.fixture(scope="function")
+def mock_requests(
+    app, respx_mock, refresh_tokens_json, request, client, default_kid, rsa_public_key
+):
     """
     Mock GET requests for:
     - obtaining JWT keys from Fence
+    - Fence's user info endpoint
     Mock POST requests for:
     - getting an access token from Fence using a refresh token
     """
+    access_token_to_authz_resource = {}
+    for refresh_tokens in refresh_tokens_json.values():
+        for refresh_token in refresh_tokens:
+            content = refresh_token["refresh_token"].split(".")[1]
+            # example: { "access_token_for_eyJhbGciOiJ.1": "/1", ... }
+            access_token_to_authz_resource[
+                f"access_token_for_{refresh_token['refresh_token']}"
+            ] = f"/{content}"
 
     def do_patch():
-        def make_mock_get_response(*args, **kwargs):
-            mocked_response = mock.MagicMock(requests.Response)
-            request_url = args[0]
-            if request_url.endswith("/jwt/keys"):
-                mocked_response.status_code = 200
-                mocked_response.json = lambda: {"keys": [[default_kid, rsa_public_key]]}
-                return mocked_response
-            else:
-                client.get(request_url, args=args, kwargs=kwargs)
+        def post_fence_token_side_effect(request):
+            request_data = urllib.parse.parse_qs(request.content.decode())
+            assert "refresh_token" in request_data
+            refresh_token = request_data["refresh_token"][0]
+            return httpx.Response(
+                200, json={"access_token": f"access_token_for_{refresh_token}"}
+            )
 
-        def make_mock_post_response(*args, **kwargs):
-            mocked_response = mock.MagicMock(requests.Response)
-            request_url = args[0]
-            request_params = kwargs["data"]
-            if request_url.endswith("/oauth2/token"):
-                mocked_response.status_code = 200
-                assert "refresh_token" in request_params
-                mocked_response.json = lambda: {
-                    "access_token": "access_token_for_"
-                    + request_params["refresh_token"]
-                }
-                return mocked_response
-            else:
-                client.post(request_url, args=args, kwargs=kwargs)
+        def get_fence_user_side_effect(request):
+            access_token = request.headers["Authorization"].split(" ")[1]
+            assert access_token in access_token_to_authz_resource
+            return httpx.Response(
+                200,
+                json={
+                    "authz": {
+                        access_token_to_authz_resource[access_token]: [
+                            {"method": "read", "service": "*"}
+                        ]
+                    },
+                    "is_admin": True,
+                    "role": "admin",
+                },
+            )
 
-        def make_mock_httpx_get_response(*args, **kwargs):
-            mocked_response = mock.MagicMock(httpx.Response)
-            request_url = args[0]
-            if request_url.endswith("/jwt/keys"):
-                mocked_response.status_code = 200
-                mocked_response.json = lambda: {"keys": [[default_kid, rsa_public_key]]}
-                return mocked_response
-            else:
-                client.get(request_url, args=args, kwargs=kwargs)
+        def create_mocks_for_fence_user(app, respx_mock):
+            for idp_config in app.config["OIDC"].values():
+                fence_url = idp_config["api_base_url"].rstrip("/")
 
-        mocked_get_request = mock.MagicMock(side_effect=make_mock_get_response)
-        patched_get_request = mock.patch("requests.get", mocked_get_request)
-        patched_get_request.start()
-        request.addfinalizer(patched_get_request.stop)
+                fence_token_url = f"{fence_url}/oauth2/token"
+                respx_mock.post(fence_token_url).mock(
+                    side_effect=post_fence_token_side_effect
+                )
 
-        mocked_post_request = mock.MagicMock(side_effect=make_mock_post_response)
-        # requests.Session.request
-        patched_post_request = mock.patch("requests.post", mocked_post_request)
-        patched_post_request.start()
-        request.addfinalizer(patched_post_request.stop)
+                fence_user_info_url = f"{fence_url}/user"
+                respx_mock.get(fence_user_info_url).mock(
+                    side_effect=get_fence_user_side_effect
+                )
 
-        mocked_httpx_get = mock.MagicMock(side_effect=make_mock_httpx_get_response)
-        patched_httpx_get = mock.patch("httpx.get", mocked_httpx_get)
-        patched_httpx_get.start()
-        request.addfinalizer(patched_httpx_get.stop)
+        create_mocks_for_fence_user(app, respx_mock)
+
+        default_fence_url = app.config["OIDC"]["default"]["api_base_url"].rstrip("/")
+        respx_mock.get(f"{default_fence_url}/jwt/keys").mock(
+            return_value=httpx.Response(
+                200, json={"keys": [[default_kid, rsa_public_key]]}
+            )
+        )
 
     return do_patch
 
