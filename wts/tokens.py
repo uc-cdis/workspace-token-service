@@ -14,6 +14,9 @@ def get_data_for_fence_request(refresh_token):
 
     Args:
         refresh_token (wts.models.RefreshToken): refresh token reference
+
+    Return:
+        tuple: (url(str), data(dict), auth(tuple))
     """
     token = refresh_token.token
     token_bytes = bytes(token, encoding="utf-8")
@@ -22,7 +25,7 @@ def get_data_for_fence_request(refresh_token):
     url = client.metadata.get("access_token_url")
     data = {"grant_type": "refresh_token", "refresh_token": token}
     auth = (client.client_id, client.client_secret)
-    return url, data, auth
+    return (url, data, auth)
 
 
 def get_access_token(requested_idp, expires=None):
@@ -60,6 +63,9 @@ async def async_get_access_token(refresh_token):
 
     Args:
         refresh_token (wts.models.RefreshToken): refresh token reference
+
+    Return:
+        tuple: (commons_hostname(str), access_token(str))
     """
     commons_hostname = flask.current_app.config["OIDC"][refresh_token.idp][
         "commons_hostname"

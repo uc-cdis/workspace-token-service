@@ -27,7 +27,15 @@ async def get_aggregate_response(endpoint):
     supported. Multiple filters can be specified:
 
     `GET /aggregate/user/user?filters=authz&filters=username`
+
+    Args:
+        endpoint (str): endpoint on each linked commons to proxy to
+
+    Return:
+        flask.wrappers.Response: aggregate JSON response
+
     """
+
     # for `GET /aggregate/user/user`, flask sets endpoint to 'user/user'
     endpoint = "/" + endpoint.rstrip("/")
     if endpoint not in flask.current_app.config["AGGREGATE_ENDPOINT_ALLOWLIST"]:
@@ -82,6 +90,17 @@ async def get_aggregate_response(endpoint):
 async def make_request(commons_hostname, endpoint, headers, parameters, filters):
     """
     Make an asychronous request to `endpoint` on `commons_hostname`.
+
+    Args:
+        commons_hostname (str): commons hostname
+        endpoint (str): endpoint
+        headers (dict): headers
+        parameters (dict): parameters
+        filters (list): filters
+
+    Return:
+        tuple: (commons_hostname(str), data(dict)), with `data` being the response
+               body from `commons_hostname` after applying any `filters`
     """
 
     # represent failure to get data with `null` JSON value (Python `None` will
