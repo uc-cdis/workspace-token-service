@@ -128,7 +128,9 @@ def setup_app(app):
     }
     app.logger.info("Set up OIDC clients: {}".format(list(app.oauth2_clients.keys())))
     app.logger.info(
-        "Aggregate endpoint allowlist: %s", app.config["AGGREGATE_ENDPOINT_ALLOWLIST"]
+        "Aggregate endpoint allowlist: {}".format(
+            app.config["AGGREGATE_ENDPOINT_ALLOWLIST"]
+        )
     )
     db.init_app(app)
     app.register_blueprint(oauth2.blueprint, url_prefix="/oauth2")

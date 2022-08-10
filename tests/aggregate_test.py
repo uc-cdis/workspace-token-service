@@ -50,7 +50,6 @@ def test_aggregate_user_user_endpoint_with_filters(
     assert idp_a_commons_hostname in res.json
     assert len(res.json[idp_a_commons_hostname]) == 2
     assert "role" in res.json[idp_a_commons_hostname]
-    wrong
     assert "authz" in res.json[idp_a_commons_hostname]
     assert_authz_mapping_for_test_user_in_idp_a_commons(
         res.json[idp_a_commons_hostname]["authz"]
