@@ -97,13 +97,15 @@ async def make_request(commons_hostname, endpoint, headers, parameters, filters)
             )
             endpoint_response.raise_for_status()
     except httpx.RequestError as e:
-        flask.current_app.logger.error("Failed to get response from %s.", e.request.url)
+        flask.current_app.logger.error(
+            "Failed to get response from {}.".format(e.request.url)
+        )
         return failure_indicator
     except httpx.HTTPStatusError as e:
         flask.current_app.logger.error(
-            "Status code %s returned from %s",
-            e.response.status_code,
-            e.request.url,
+            "Status code {} returned from {}".format(
+                e.response.status_code, e.request.url
+            )
         )
         return failure_indicator
 
@@ -111,7 +113,9 @@ async def make_request(commons_hostname, endpoint, headers, parameters, filters)
     for filter_parameter in filters:
         if filter_parameter not in data:
             raise UserError(
-                f"at least one of the provided filters is not a key in the response returned from {endpoint_url}"
+                "at least one of the provided filters is not a key in the response returned from {}".format(
+                    endpoint_url
+                )
             )
 
     if filters:

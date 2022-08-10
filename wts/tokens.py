@@ -73,13 +73,13 @@ async def async_get_access_token(refresh_token):
             access_token = res.json()["access_token"]
     except httpx.RequestError as e:
         flask.current_app.logger.error(
-            "Failed to POST %s to obtain access token", e.request.url
+            "Failed to POST {} to obtain access token".format(e.request.url)
         )
     except httpx.HTTPStatusError as e:
         flask.current_app.logger.error(
-            "Failed to POST %s to obtain access token. Status code: %s",
-            e.request.url,
-            e.response.status_code,
+            "Failed to POST {} to obtain access token. Status code: {}".format(
+                e.request.url, e.response.status_code
+            )
         )
     except Exception as e:
         flask.current_app.logger.error(
