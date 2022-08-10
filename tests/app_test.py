@@ -51,7 +51,7 @@ def test_token_endpoint_with_default_idp(client, persisted_refresh_tokens, auth_
 
 
 def test_token_endpoint_with_idp_a(client, persisted_refresh_tokens, auth_header):
-    # the token returned for a specific IDP should be created using the
+    # the token returned for a specific IdP should be created using the
     # corresponding refresh_token, using the logged in user's username
     res = client.get("/token/?idp=idp_a", headers=auth_header)
     assert res.status_code == 200
@@ -83,9 +83,9 @@ def test_authorize_endpoint(client, test_user, db_session, auth_header):
     # mock `fetch_access_token` to avoid external calls
     mocked_response = mock.MagicMock()
     mocked_response.side_effect = [
-        # returned object for IDP "default":
+        # returned object for IdP "default":
         {"refresh_token": fake_tokens["default"], "id_token": "eyJhbGciOiJ"},
-        # returned object for IDP "idp_a":
+        # returned object for IdP "idp_a":
         {"refresh_token": fake_tokens["idp_a"], "id_token": "eyJhbGciOiJ"},
     ]
     patched_fetch_access_token = mock.patch(
@@ -97,19 +97,19 @@ def test_authorize_endpoint(client, test_user, db_session, auth_header):
     now = int(time.time())
     mocked_jwt_response = mock.MagicMock()
     mocked_jwt_response.side_effect = [
-        # decoded id_token for IDP "default":
+        # decoded id_token for IdP "default":
         {"context": {"user": {"name": test_user.username}}},
-        # decoded refresh_token for IDP "default":
+        # decoded refresh_token for IdP "default":
         {"jti": str(uuid.uuid4()), "exp": now + 100, "sub": test_user.userid},
-        # decoded id_token for IDP "idp_a":
+        # decoded id_token for IdP "idp_a":
         {"context": {"user": {"name": test_user.username}}},
-        # decoded refresh_token for IDP "idp_a":
+        # decoded refresh_token for IdP "idp_a":
         {"jti": str(uuid.uuid4()), "exp": now + 100, "sub": test_user.userid},
     ]
     patched_jwt_decode = mock.patch("jose.jwt.decode", mocked_jwt_response)
     patched_jwt_decode.start()
 
-    # get refresh token for IDP "default"
+    # get refresh token for IdP "default"
     fake_state = "qwerty"
     with client.session_transaction() as session:
         session["state"] = fake_state
@@ -118,7 +118,7 @@ def test_authorize_endpoint(client, test_user, db_session, auth_header):
     )
     assert res.status_code == 200, res.json
 
-    # get refresh token for IDP "idp_a"
+    # get refresh token for IdP "idp_a"
     with client.session_transaction() as session:
         session["state"] = fake_state
         session["idp"] = "idp_a"
@@ -187,7 +187,7 @@ def test_external_oidc_endpoint_with_persisted_refresh_tokens(
     print("Returned providers after logging in: {}".format(actual_oidc))
 
     for provider in actual_oidc:
-        if provider["idp"] == "idp_a":  # test user is logged into this IDP
+        if provider["idp"] == "idp_a":  # test user is logged into this IdP
             assert provider["refresh_token_expiration"] != None
         else:
             assert provider["refresh_token_expiration"] == None

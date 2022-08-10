@@ -25,8 +25,8 @@ def get_config_var(variable, default=None, secret_config={}):
 def get_oauth_client(idp=None):
     """
     Args:
-        idp (str, optional): IDP for the OAuthClient to return. Usually
-            the IDP argument of the current flask request. If not provided,
+        idp (str, optional): IdP for the OAuthClient to return. Usually
+            the IdP argument of the current flask request. If not provided,
             will return the default OAuth2Session.
 
     Returns:
@@ -37,7 +37,7 @@ def get_oauth_client(idp=None):
         client = flask.current_app.oauth2_clients[idp]
     except KeyError:
         flask.current_app.logger.exception(
-            'Requested IDP "{}" is not configured'.format(idp)
+            'Requested IdP "{}" is not configured'.format(idp)
         )
-        raise UserError('Requested IDP "{}" is not configured'.format(idp))
+        raise UserError('Requested IdP "{}" is not configured'.format(idp))
     return client

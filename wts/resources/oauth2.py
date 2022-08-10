@@ -85,7 +85,7 @@ def refresh_refresh_token(tokens, idp):
     username = user.username
 
     flask.current_app.logger.info(
-        'Linking username "{}" for IDP "{}" to current user "{}"'.format(
+        'Linking username "{}" for IdP "{}" to current user "{}"'.format(
             id_token["context"]["user"]["name"], idp, username
         )
     )

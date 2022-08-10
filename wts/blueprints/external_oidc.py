@@ -22,13 +22,13 @@ def get_external_oidc():
     details, including the timestamp at which the refresh token for the
     currently logged in user will expire (or "null" if there is no refresh
     token, or if it's already expired). If "unexpired=true" is used, will
-    only return IDPs for which the currently logged in user has a valid
+    only return IdPs for which the currently logged in user has a valid
     refresh token.
 
     We use the "providers" field and make "urls" a list to match the format
     of the Fence "/login" endpoint, and so that we can implement a more
     complex "login options" logic in the future (automatically get the
-    available login options for each IDP, which could include dropdowns).
+    available login options for each IdP, which could include dropdowns).
     """
 
     unexpired_only = flask.request.args.get("unexpired", "false").lower() == "true"
@@ -69,7 +69,7 @@ def get_external_oidc():
         username = user.username
     except Exception:
         flask.current_app.logger.info(
-            "no logged in user: will return refresh_token_expiration=None for all IDPs"
+            "no logged in user: will return refresh_token_expiration=None for all IdPs"
         )
 
     # get all expirations at once (1 DB query)
@@ -95,7 +95,7 @@ def generate_authorization_url(idp):
 
     Returns:
         str: authorization URL to go through the OIDC flow and get a
-            refresh token for this IDP
+            refresh token for this IdP
     """
     wts_base_url = get_config_var("WTS_BASE_URL")
     authorization_url = wts_base_url + "oauth2/authorization_url?idp=" + idp
@@ -120,7 +120,7 @@ def seconds_to_human_time(seconds):
 def get_refresh_token_expirations(username, idps):
     """
     Returns:
-        dict: IDP to expiration of the most recent refresh token, or None if it's expired.
+        dict: IdP to expiration of the most recent refresh token, or None if it's expired.
     """
     now = int(time.time())
     refresh_tokens = (

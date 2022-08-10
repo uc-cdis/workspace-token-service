@@ -10,7 +10,7 @@ from .utils import get_oauth_client
 
 def get_data_for_fence_request(refresh_token):
     """
-    Given `refresh_token`, prepare data for request to IDP's token endpoint.
+    Given `refresh_token`, prepare data for request to IdP's token endpoint.
 
     Args:
         refresh_token (wts.models.RefreshToken): refresh token reference
@@ -27,10 +27,10 @@ def get_data_for_fence_request(refresh_token):
 
 def get_access_token(requested_idp, expires=None):
     if requested_idp not in flask.current_app.oauth2_clients:
-        raise UserError('Requested IDP "{}" is not configured'.format(requested_idp))
+        raise UserError('Requested IdP "{}" is not configured'.format(requested_idp))
     username = flask.g.user.username
     flask.current_app.logger.info(
-        "Getting refresh token for user '{}', IDP '{}'".format(username, requested_idp)
+        "Getting refresh token for user '{}', IdP '{}'".format(username, requested_idp)
     )
     refresh_token = (
         db.session.query(RefreshToken)
