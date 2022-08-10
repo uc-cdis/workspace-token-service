@@ -175,7 +175,8 @@ paths:
         description: >
           To reduce the size of the aggregated response body, only return
           JSON key-value pairs whose key is in filters. Multiple filters
-          can be specified by repeating the filters in the URL
+          can be specified by repeating the filters in the URL. Nested
+          filters such as "toplevel.nested" are not yet supported.
         required: false
         default: []
         items:

@@ -23,7 +23,8 @@ async def get_aggregate_response(endpoint):
 
     The size of the aggregated response body can be reduced by supplying a
     `filters` parameter. If provided, only return JSON key-value pairs whose
-    key is in `filters`. Multiple filters can be specified:
+    key is in `filters`. Nested filters such as "toplevel.nested" are not yet
+    supported. Multiple filters can be specified:
 
     `GET /aggregate/user/user?filters=authz&filters=username`
     """
