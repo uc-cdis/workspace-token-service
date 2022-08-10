@@ -187,6 +187,22 @@ def refresh_tokens_json(test_user, other_user):
     }
 
 
+def assert_authz_mapping_for_test_user_in_default_commons(authz_mapping):
+    assert "/1" in authz_mapping
+    assert "/2" not in authz_mapping
+    assert "/3" not in authz_mapping
+    assert "/4" not in authz_mapping
+    assert "/5" not in authz_mapping
+
+
+def assert_authz_mapping_for_test_user_in_idp_a_commons(authz_mapping):
+    assert "/3" in authz_mapping
+    assert "/1" not in authz_mapping
+    assert "/2" not in authz_mapping
+    assert "/4" not in authz_mapping
+    assert "/5" not in authz_mapping
+
+
 @pytest.fixture(scope="function")
 def persisted_refresh_tokens(refresh_tokens_json, db_session):
     for idp, refresh_tokens in refresh_tokens_json.items():
