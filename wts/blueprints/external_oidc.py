@@ -123,7 +123,7 @@ def get_refresh_token_expirations(username, idps):
         dict: IdP to expiration of the most recent refresh token, or None if it's expired.
     """
     now = int(time.time())
-    with db.session as session:
+    with flask.current_app.Session() as session:
         refresh_tokens = (
             session.query(RefreshToken)
             .filter_by(username=username)

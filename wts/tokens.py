@@ -35,7 +35,7 @@ def get_access_token(requested_idp, expires=None):
     flask.current_app.logger.info(
         "Getting refresh token for user '{}', IdP '{}'".format(username, requested_idp)
     )
-    with db.session as session:
+    with flask.current_app.Session() as session:
         refresh_token = (
             session.query(RefreshToken)
             .filter_by(username=username)

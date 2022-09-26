@@ -32,7 +32,7 @@ def client_do_authorize():
 
 def find_valid_refresh_token(username, idp):
     has_valid = False
-    with db.session as session:
+    with flask.current_app.Session() as session:
         for token in (
             session.query(RefreshToken).filter_by(username=username).filter_by(idp=idp)
         ):
@@ -70,7 +70,7 @@ def refresh_refresh_token(tokens, idp):
     id_token = jwt.decode(id_token, key=None, options=options)
     content = jwt.decode(refresh_token, key=None, options=options)
     userid = content["sub"]
-    with db.session as session:
+    with flask.current_app.Session() as session:
         for old_token in (
             session.query(RefreshToken).filter_by(userid=userid).filter_by(idp=idp)
         ):

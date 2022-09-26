@@ -49,7 +49,7 @@ async def get_aggregate_response(endpoint):
 
     if flask.request.headers.get("Authorization"):
         authenticate(allow_access_token=True)
-        with db.session as session:
+        with flask.current_app.Session() as session:
             refresh_tokens = (
                 session.query(RefreshToken)
                 .filter_by(username=flask.g.user.username)

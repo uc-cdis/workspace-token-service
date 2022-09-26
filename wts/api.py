@@ -13,7 +13,6 @@ from .models import db, Base, RefreshToken
 from .utils import get_config_var as get_var
 from .version_data import VERSION, COMMIT
 
-
 app = Flask(__name__)
 app.logger = get_logger(__name__, log_level="info")
 
@@ -45,6 +44,8 @@ def load_settings(app):
             ] = "postgresql://{db_username}:{db_password}@{db_host}:5432/{db_database}".format(
                 **creds
             )
+            app.engine = create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
+            app.Session = sessionmaker(engine)
     else:
         app.config["SQLALCHEMY_DATABASE_URI"] = get_var("SQLALCHEMY_DATABASE_URI")
     url = get_var("FENCE_BASE_URL")
@@ -145,7 +146,7 @@ def health_check():
     Health check endpoint
     """
     try:
-        with db.session as session:
+        with flask.current_app.Session() as session:
             session.query(RefreshToken).first()
             return "Healthy", 200
     except Exception as e:
