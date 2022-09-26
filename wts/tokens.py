@@ -35,13 +35,14 @@ def get_access_token(requested_idp, expires=None):
     flask.current_app.logger.info(
         "Getting refresh token for user '{}', IdP '{}'".format(username, requested_idp)
     )
-    refresh_token = (
-        db.session.query(RefreshToken)
-        .filter_by(username=username)
-        .filter_by(idp=requested_idp)
-        .order_by(RefreshToken.expires.desc())
-        .first()
-    )
+    with db.session as session:
+        refresh_token = (
+            session.query(RefreshToken)
+            .filter_by(username=username)
+            .filter_by(idp=requested_idp)
+            .order_by(RefreshToken.expires.desc())
+            .first()
+        )
     now = int(time.time())
     if not refresh_token:
         raise AuthError("User doesn't have a refresh token")

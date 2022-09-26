@@ -32,14 +32,19 @@ def client_do_authorize():
 
 def find_valid_refresh_token(username, idp):
     has_valid = False
-    for token in (
-        db.session.query(RefreshToken).filter_by(username=username).filter_by(idp=idp)
-    ):
-        flask.current_app.logger.info("find token with exp {}".format(token.expires))
-        if datetime.fromtimestamp(token.expires) < datetime.now():
-            flask.current_app.logger.info("Purging expired token {}".format(token.jti))
-        else:
-            has_valid = True
+    with db.session as session:
+        for token in (
+            session.query(RefreshToken).filter_by(username=username).filter_by(idp=idp)
+        ):
+            flask.current_app.logger.info(
+                "find token with exp {}".format(token.expires)
+            )
+            if datetime.fromtimestamp(token.expires) < datetime.now():
+                flask.current_app.logger.info(
+                    "Purging expired token {}".format(token.jti)
+                )
+            else:
+                has_valid = True
     return has_valid
 
 
@@ -65,37 +70,40 @@ def refresh_refresh_token(tokens, idp):
     id_token = jwt.decode(id_token, key=None, options=options)
     content = jwt.decode(refresh_token, key=None, options=options)
     userid = content["sub"]
-    for old_token in (
-        db.session.query(RefreshToken).filter_by(userid=userid).filter_by(idp=idp)
-    ):
+    with db.session as session:
+        for old_token in (
+            session.query(RefreshToken).filter_by(userid=userid).filter_by(idp=idp)
+        ):
+            flask.current_app.logger.info(
+                "Refreshing token, purging {}".format(old_token.jti)
+            )
+            session.delete(old_token)
+        refresh_token = flask.current_app.encryption_key.encrypt(
+            bytes(refresh_token, encoding="utf8")
+        ).decode("utf8")
+
+        # get the username of the current logged in user.
+        # `current_user` validates the token and relies on `OIDC_ISSUER`
+        # to know the issuer
+        client = get_oauth_client(idp="default")
+        flask.current_app.config["OIDC_ISSUER"] = client.metadata["api_base_url"].strip(
+            "/"
+        )
+        user = current_user
+        username = user.username
+
         flask.current_app.logger.info(
-            "Refreshing token, purging {}".format(old_token.jti)
+            'Linking username "{}" for IdP "{}" to current user "{}"'.format(
+                id_token["context"]["user"]["name"], idp, username
+            )
         )
-        db.session.delete(old_token)
-    refresh_token = flask.current_app.encryption_key.encrypt(
-        bytes(refresh_token, encoding="utf8")
-    ).decode("utf8")
-
-    # get the username of the current logged in user.
-    # `current_user` validates the token and relies on `OIDC_ISSUER`
-    # to know the issuer
-    client = get_oauth_client(idp="default")
-    flask.current_app.config["OIDC_ISSUER"] = client.metadata["api_base_url"].strip("/")
-    user = current_user
-    username = user.username
-
-    flask.current_app.logger.info(
-        'Linking username "{}" for IdP "{}" to current user "{}"'.format(
-            id_token["context"]["user"]["name"], idp, username
+        new_token = RefreshToken(
+            token=refresh_token,
+            userid=userid,
+            username=username,
+            jti=content["jti"],
+            expires=content["exp"],
+            idp=idp,
         )
-    )
-    new_token = RefreshToken(
-        token=refresh_token,
-        userid=userid,
-        username=username,
-        jti=content["jti"],
-        expires=content["exp"],
-        idp=idp,
-    )
-    db.session.add(new_token)
-    db.session.commit()
+        session.add(new_token)
+        session.commit()

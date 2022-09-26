@@ -49,12 +49,13 @@ async def get_aggregate_response(endpoint):
 
     if flask.request.headers.get("Authorization"):
         authenticate(allow_access_token=True)
-        refresh_tokens = (
-            db.session.query(RefreshToken)
-            .filter_by(username=flask.g.user.username)
-            .filter(RefreshToken.expires > int(time.time()))
-            .order_by(RefreshToken.expires.asc())
-        )
+        with db.session as session:
+            refresh_tokens = (
+                session.query(RefreshToken)
+                .filter_by(username=flask.g.user.username)
+                .filter(RefreshToken.expires > int(time.time()))
+                .order_by(RefreshToken.expires.asc())
+            )
         #  if a user has multiple refresh tokens for the same commons, we want
         #  the latest one to be used. see
         #  https://stackoverflow.com/questions/39678672/is-a-python-dict-comprehension-always-last-wins-if-there-are-duplicate-keys
