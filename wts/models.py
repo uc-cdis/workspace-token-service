@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Integer, String, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
 
-db = SQLAlchemy()
+db = SQLAlchemy(engine_options={"pool_size": 10, "max_overflow": 20})
 Base = declarative_base()
 
 
