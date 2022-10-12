@@ -52,7 +52,7 @@ Two methods exist for authenticating a request to the `/token` endpoint:
     "fence_base_url": "https://my-data-commons.net/user/",
     "oidc_client_id": "xxx",
     "oidc_client_secret": "xxx",
-
+    "aggregate_endpoint_allowlist" : [],
     "external_oidc": [
         {
             "base_url": "https://other-data-commons.net",
@@ -93,6 +93,7 @@ an optional field that supports sharing OIDC client
 configuration between multiple workspace deployments
 as part of a multi-account application system.
 
+The key `aggregate_endpoint_allowlist` is an optional key which consists of a list of endpoints that are supported by the `/aggregate` api.
 
 ## Dev-Test
 
