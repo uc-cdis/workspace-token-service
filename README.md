@@ -52,7 +52,7 @@ Two methods exist for authenticating a request to the `/token` endpoint:
     "fence_base_url": "https://my-data-commons.net/user/",
     "oidc_client_id": "xxx",
     "oidc_client_secret": "xxx",
-    "aggregate_endpoint_allowlist" : [],
+    "aggregate_endpoint_allowlist" : ["/authz/mapping", "/user/user"],
     "external_oidc": [
         {
             "base_url": "https://other-data-commons.net",
