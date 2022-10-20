@@ -100,7 +100,7 @@ async def make_request(commons_hostname, endpoint, headers, parameters, filters)
 
     Return:
         tuple: (commons_hostname(str), data(dict)), with `data` being the response
-               body from `commons_hostname` after applying any `filters`
+                body from `commons_hostname` after applying any `filters`
     """
 
     # represent failure to get data with `null` JSON value (Python `None` will
