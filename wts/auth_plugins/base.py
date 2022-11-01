@@ -23,9 +23,14 @@ class AccessTokenPlugin(object):
         # `current_user` validates the token and relies on `OIDC_ISSUER`
         # to know the issuer
         default_oauth_client = get_oauth_client(idp="default")
+        flask.current_app.config["USER_API"] = default_oauth_client.metatada[
+            "internal_api_base_url"
+        ].rstrip("/")
         flask.current_app.config["OIDC_ISSUER"] = default_oauth_client.metadata[
             "api_base_url"
         ].rstrip("/")
+
+        flask.current_app.config["FORCE_ISSUER"] = True
 
         user = current_user
         return User(userid=user.id, username=user.username)

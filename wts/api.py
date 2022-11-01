@@ -50,6 +50,15 @@ def load_settings(app):
     url = get_var("FENCE_BASE_URL")
     fence_base_url = url if url.endswith("/") else (url + "/")
 
+    internal_fence_base_url = get_var(
+        "INTERNAL_FENCE_BASE_URL", "http://fence-service/"
+    )
+    internal_fence_base_url = (
+        internal_fence_base_url
+        if internal_fence_base_url.endswith("/")
+        else (internal_fence_base_url + "/")
+    )
+
     wts_base_url = get_var("WTS_BASE_URL")
     if not wts_base_url.endswith("/"):
         wts_base_url = wts_base_url + "/"
@@ -58,9 +67,11 @@ def load_settings(app):
         "client_id": get_var("OIDC_CLIENT_ID"),
         "client_secret": get_var("OIDC_CLIENT_SECRET"),
         "commons_hostname": urlparse(fence_base_url).netloc,
+        "internal_api_base_url": internal_fence_base_url,
         "api_base_url": fence_base_url,
-        "authorize_url": fence_base_url + "oauth2/authorize",
-        "access_token_url": fence_base_url + "oauth2/token",
+        "authorize_url": get_var("AUTHORIZE_URL", fence_base_url) + "oauth2/authorize",
+        "access_token_url": get_var("ACCESS_TOKEN_URL", internal_fence_base_url)
+        + "oauth2/token",
         "redirect_uri": wts_base_url + "oauth2/authorize",
         "scope": "openid data user",
         "state_prefix": "",
