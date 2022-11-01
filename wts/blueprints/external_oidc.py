@@ -62,7 +62,11 @@ def get_external_oidc():
     # `current_user` validates the token and relies on `OIDC_ISSUER`
     # to know the issuer
     client = get_oauth_client(idp="default")
+    flask.current_app.config["USER_API"] = client.metadata[
+        "internal_api_base_url"
+    ].strip("/")
     flask.current_app.config["OIDC_ISSUER"] = client.metadata["api_base_url"].strip("/")
+    flask.current_app.config["FORCE_ISSUER"] = True
     username = None
     try:
         user = current_user
