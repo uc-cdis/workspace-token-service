@@ -30,7 +30,6 @@ jobs:
       - name: Install poetry
         run: |
           pip install --upgrade pip
-          pip version
           pip install poetry
           poetry install -vv
       - name: Run test
