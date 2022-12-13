@@ -1,0 +1,38 @@
+
+name: Run pytest
+
+on: push
+
+jobs:
+  run_tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13.9-bullseye
+        ports:
+          - "5432:5432"
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Install poetry
+        run: |
+          pip install --upgrade pip
+          pip version
+          pip install poetry
+          poetry install -vv
+      - name: Run test
+        run: |
+          poetry run pytest -vv
