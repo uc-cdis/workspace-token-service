@@ -1,5 +1,6 @@
 {
     "fence_base_url": "https://localhost/user",
+    "internal_fence_base_url": "https://localhost/user",
     "oidc_client_id": "test",
     "oidc_client_secret": "test",
     "secret_key": "test",
