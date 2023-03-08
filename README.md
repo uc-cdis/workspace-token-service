@@ -189,3 +189,6 @@ helm upgrade --install gen3/wts
 You can also store your images in a local registry. Kind and Minikube are popular for their local registries:
 - https://kind.sigs.k8s.io/docs/user/local-registry/
 - https://minikube.sigs.k8s.io/docs/handbook/registry/#enabling-insecure-registries
+
+Dependencies:
+Requestor relies on Fence to run. Please view the [Fence Quick Start Guide](https://github.com/uc-cdis/fence) for more information.
