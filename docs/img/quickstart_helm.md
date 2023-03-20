@@ -12,6 +12,7 @@ helm upgrade --install gen3/wts
 These commands will add the Gen3 helm chart repo and install the wts service to your Kubernetes cluster.
 
 Deploying wts this way will use the defaults that are defined in this [values.yaml file](https://github.com/uc-cdis/gen3-helm/blob/master/helm/wts/values.yaml)
+
 You can learn more about these values by accessing the wts [README.md](https://github.com/uc-cdis/gen3-helm/blob/master/helm/wts/README.md)
 
 If you would like to override any of the default values, simply copy the above values.yaml file into a local file and make any changes needed.
