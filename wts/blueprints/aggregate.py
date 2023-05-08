@@ -62,6 +62,8 @@ async def get_aggregate_response(endpoint):
             flask.current_app.config["OIDC"][rt.idp]["commons_hostname"]: rt
             for rt in refresh_tokens
         }
+        # Release the db session as it is no longer needed in this call
+        db.session.close()
         access_tokens = await asyncio.gather(
             *[async_get_access_token(rt) for rt in refresh_tokens.values()]
         )
