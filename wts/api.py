@@ -150,6 +150,8 @@ def health_check():
     except Exception as e:
         app.logger.exception("Unable to query DB: {}".format(e))
         return "Unhealthy", 500
+    finally:
+        db.session.close()
 
 
 @app.route("/_version", methods=["GET"])
