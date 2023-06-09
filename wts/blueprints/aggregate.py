@@ -55,7 +55,7 @@ async def get_aggregate_response(endpoint):
             .filter(RefreshToken.expires > int(time.time()))
             .order_by(RefreshToken.expires.asc())
         )
-        # Release the db session as it is no longer needed in this call
+        # Release the db session as it is no longer needed
         db.session.close()
 
         #  if a user has multiple refresh tokens for the same commons, we want
