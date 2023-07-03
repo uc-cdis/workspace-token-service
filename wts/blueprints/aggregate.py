@@ -59,7 +59,7 @@ async def get_aggregate_response(endpoint):
         db.session.close()
 
     # If a user has no refresh tokens, fallback to the response of a user with not auth header
-    if refresh_tokens and list(len(refresh_tokens)) > 0:
+    if refresh_tokens and len(list(refresh_tokens)) > 0:
         #  if a user has multiple refresh tokens for the same commons, we want
         #  the latest one to be used. see
         #  https://stackoverflow.com/questions/39678672/is-a-python-dict-comprehension-always-last-wins-if-there-are-duplicate-keys
