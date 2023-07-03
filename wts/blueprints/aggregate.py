@@ -46,7 +46,7 @@ async def get_aggregate_response(endpoint):
     filters = flask.request.args.getlist("filters")
     parameters = flask.request.args.to_dict()
     parameters.pop("filters", None)
-
+    refresh_tokens = None
     if flask.request.headers.get("Authorization"):
         authenticate(allow_access_token=True)
         refresh_tokens = (
