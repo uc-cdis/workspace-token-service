@@ -46,7 +46,7 @@ async def get_aggregate_response(endpoint):
     filters = flask.request.args.getlist("filters")
     parameters = flask.request.args.to_dict()
     parameters.pop("filters", None)
-    refresh_tokens = None
+
     if flask.request.headers.get("Authorization"):
         authenticate(allow_access_token=True)
         refresh_tokens = (
@@ -58,8 +58,6 @@ async def get_aggregate_response(endpoint):
         # Release the db session as it is no longer needed
         db.session.close()
 
-    # If a user has no refresh tokens, fallback to the response of a user with not auth header
-    if refresh_tokens and len(list(refresh_tokens)) > 0:
         #  if a user has multiple refresh tokens for the same commons, we want
         #  the latest one to be used. see
         #  https://stackoverflow.com/questions/39678672/is-a-python-dict-comprehension-always-last-wins-if-there-are-duplicate-keys
@@ -74,7 +72,7 @@ async def get_aggregate_response(endpoint):
         request_info = [
             (commons, endpoint, {"Authorization": f"Bearer {access_token}"})
             if access_token
-            else (commons, None, None)
+            else (commons, endpoint, {})
             for commons, access_token in access_tokens
         ]
     else:
