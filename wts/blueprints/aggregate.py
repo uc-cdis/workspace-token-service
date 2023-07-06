@@ -77,9 +77,10 @@ async def get_aggregate_response(endpoint):
 
         access_tokens = await asyncio.gather(
             *[
-                async_get_access_token(rt)
-                for rt in refresh_tokens.values()
-                if rt is not None
+                async_get_access_token(refresh_token)
+                if refresh_token
+                else (commons, None)
+                for commons, refresh_token in refresh_tokens.items()
             ]
         )
         request_info = [
