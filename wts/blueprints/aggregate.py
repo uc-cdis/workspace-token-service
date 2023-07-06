@@ -76,7 +76,11 @@ async def get_aggregate_response(endpoint):
         )
 
         access_tokens = await asyncio.gather(
-            *[async_get_access_token(rt) for rt in refresh_tokens.values()]
+            *[
+                async_get_access_token(rt)
+                for rt in refresh_tokens.values()
+                if rt is not None
+            ]
         )
         request_info = [
             (commons, endpoint, {"Authorization": f"Bearer {access_token}"})
