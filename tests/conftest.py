@@ -149,6 +149,24 @@ def insert_into_refresh_token_table(db_session, idp, data):
 
 
 @pytest.fixture(scope="function")
+def default_refresh_tokens_json(test_user, other_user):
+    return {
+        "default": [
+            {
+                "username": test_user.username,
+                "userid": test_user.userid,
+                "refresh_token": "eyJhbGciOiJ.1",
+            },
+            {
+                "username": other_user.username,
+                "userid": other_user.userid,
+                "refresh_token": "eyJhbGciOiJ.2",
+            },
+        ],
+    }
+
+
+@pytest.fixture(scope="function")
 def refresh_tokens_json(test_user, other_user):
     now = int(time.time())
     return {
@@ -188,6 +206,7 @@ def refresh_tokens_json(test_user, other_user):
 
 
 def assert_authz_mapping_for_test_user_in_default_commons(authz_mapping):
+    assert "/open" in authz_mapping
     assert "/1" in authz_mapping
     assert "/2" not in authz_mapping
     assert "/3" not in authz_mapping
@@ -196,9 +215,19 @@ def assert_authz_mapping_for_test_user_in_default_commons(authz_mapping):
 
 
 def assert_authz_mapping_for_test_user_in_idp_a_commons(authz_mapping):
+    assert "/open" in authz_mapping
     assert "/3" in authz_mapping
     assert "/1" not in authz_mapping
     assert "/2" not in authz_mapping
+    assert "/4" not in authz_mapping
+    assert "/5" not in authz_mapping
+
+
+def assert_authz_mapping_for_user_without_access_token(authz_mapping):
+    assert "/open" in authz_mapping
+    assert "/1" not in authz_mapping
+    assert "/2" not in authz_mapping
+    assert "/3" not in authz_mapping
     assert "/4" not in authz_mapping
     assert "/5" not in authz_mapping
 
@@ -209,6 +238,14 @@ def persisted_refresh_tokens(refresh_tokens_json, db_session):
         for refresh_token in refresh_tokens:
             insert_into_refresh_token_table(db_session, idp, refresh_token)
     return refresh_tokens_json
+
+
+@pytest.fixture(scope="function")
+def default_refresh_tokens(default_refresh_tokens_json, db_session):
+    for idp, refresh_tokens in default_refresh_tokens_json.items():
+        for refresh_token in refresh_tokens:
+            insert_into_refresh_token_table(db_session, idp, refresh_token)
+    return default_refresh_tokens_json
 
 
 @pytest.fixture(scope="function")
@@ -249,14 +286,28 @@ def mock_requests(
                     "authz": {
                         access_token_to_authz_resource[access_token]: [
                             {"method": "read", "service": "*"}
-                        ]
+                        ],
+                        "/open": [{"method": "read", "service": "*"}],
                     },
                     "is_admin": True,
                     "role": "admin",
                 },
             )
 
-        def create_mocks_for_fence_user(app, respx_mock):
+        def get_arborist_authz_side_effect(request):
+            access_token = (
+                request.headers["Authorization"].split(" ")[1]
+                if "Authorization" in request.headers
+                else None
+            )
+            response_data = {"/open": [{"method": "read", "service": "*"}]}
+            if access_token in access_token_to_authz_resource:
+                response_data[access_token_to_authz_resource[access_token]] = [
+                    {"method": "read", "service": "*"}
+                ]
+            return httpx.Response(200, json=response_data)
+
+        def create_mocks_for_user(app, respx_mock):
             for idp_config in app.config["OIDC"].values():
                 fence_url = idp_config["api_base_url"].rstrip("/")
 
@@ -270,7 +321,13 @@ def mock_requests(
                     side_effect=get_fence_user_side_effect
                 )
 
-        create_mocks_for_fence_user(app, respx_mock)
+                commons_base_url = f'https://{idp_config["commons_hostname"]}'
+                authz_mapping_url = f"{commons_base_url}/authz/mapping"
+                respx_mock.get(authz_mapping_url).mock(
+                    side_effect=get_arborist_authz_side_effect
+                )
+
+        create_mocks_for_user(app, respx_mock)
 
         default_fence_url = app.config["OIDC"]["default"]["api_base_url"].rstrip("/")
         respx_mock.get(f"{default_fence_url}/jwt/keys").mock(

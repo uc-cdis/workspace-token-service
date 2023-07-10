@@ -4,6 +4,7 @@ import uuid
 from .conftest import (
     assert_authz_mapping_for_test_user_in_default_commons,
     assert_authz_mapping_for_test_user_in_idp_a_commons,
+    assert_authz_mapping_for_user_without_access_token,
 )
 
 
@@ -139,3 +140,63 @@ def test_aggregate_with_endpoint_not_in_allowlist(client, auth_header):
     """
     res = client.get("/aggregate/user/credentials/api", headers=auth_header)
     assert res.status_code == 404
+
+
+def test_aggregate_authz_mapping_endpoint_with_no_connected_commons(
+    app, client, default_refresh_tokens, auth_header
+):
+    """
+    Test aggregate endpoint using `/authz/mapping` when "idp_a" has no refresh_token. Expect a
+    200 response with aggregate data returned from
+    the default commons and "idp_a".
+    """
+    res = client.get("/aggregate/authz/mapping", headers=auth_header)
+    assert res.status_code == 200
+    assert len(res.json) == 2
+
+    default_commons_hostname = app.config["OIDC"]["default"]["commons_hostname"]
+    assert default_commons_hostname in res.json
+
+    # Authz mapping returns both open and controlled access records
+    assert len(res.json[default_commons_hostname]) == 2
+    assert_authz_mapping_for_test_user_in_default_commons(
+        res.json[default_commons_hostname]
+    )
+
+    idp_a_commons_hostname = app.config["OIDC"]["idp_a"]["commons_hostname"]
+    assert idp_a_commons_hostname in res.json
+
+    # Authz mapping returns only open access records since no refresh_token for idp_a
+    assert len(res.json[idp_a_commons_hostname]) == 1
+    assert_authz_mapping_for_user_without_access_token(res.json[idp_a_commons_hostname])
+
+
+def test_aggregate_authz_mapping_endpoint_with_connected_commons(
+    app, client, persisted_refresh_tokens, auth_header
+):
+    """
+    Test aggregate endpoint using `/authz/mapping` when "idp_a" has no refresh_token. Expect a
+    200 response with aggregate data returned from
+    the default commons and "idp_a".
+    """
+    res = client.get("/aggregate/authz/mapping", headers=auth_header)
+    assert res.status_code == 200
+    assert len(res.json) == 2
+
+    default_commons_hostname = app.config["OIDC"]["default"]["commons_hostname"]
+    assert default_commons_hostname in res.json
+
+    # Authz mapping returns both open and controlled access records
+    assert len(res.json[default_commons_hostname]) == 2
+    assert_authz_mapping_for_test_user_in_default_commons(
+        res.json[default_commons_hostname]
+    )
+
+    idp_a_commons_hostname = app.config["OIDC"]["idp_a"]["commons_hostname"]
+    assert idp_a_commons_hostname in res.json
+
+    # Authz mapping returns both open and controlled access records
+    assert len(res.json[idp_a_commons_hostname]) == 2
+    assert_authz_mapping_for_test_user_in_idp_a_commons(
+        res.json[idp_a_commons_hostname]
+    )
