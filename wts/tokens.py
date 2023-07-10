@@ -63,9 +63,10 @@ async def async_get_access_token(refresh_token, commons_hostname=None):
 
     Args:
         refresh_token (wts.models.RefreshToken): refresh token reference
+        commons_hostname (str): optional. name of the data commons, extracted from refresh token if absent.
 
     Return:
-        tuple: (commons_hostname(str), access_token(str))
+        tuple: (commons_hostname(str), access_token(str or None))
     """
     if not refresh_token:
         return commons_hostname, None
