@@ -175,9 +175,8 @@ def test_aggregate_authz_mapping_endpoint_with_connected_commons(
     app, client, persisted_refresh_tokens, auth_header
 ):
     """
-    Test aggregate endpoint using `/authz/mapping` when "idp_a" has no refresh_token. Expect a
-    200 response with aggregate data returned from
-    the default commons and "idp_a".
+    Test aggregate endpoint using `/authz/mapping` when "idp_a" also has a refresh_token. Expect a
+    200 response with aggregate data returned from the default commons and "idp_a".
     """
     res = client.get("/aggregate/authz/mapping", headers=auth_header)
     assert res.status_code == 200
