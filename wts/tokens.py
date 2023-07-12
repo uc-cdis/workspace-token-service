@@ -57,19 +57,24 @@ def get_access_token(requested_idp, expires=None):
     return r.json()["access_token"]
 
 
-async def async_get_access_token(refresh_token):
+async def async_get_access_token(refresh_token, commons_hostname=None):
     """
     Make an asynchronous request to obtain an access token given 'refresh_token'.
 
     Args:
         refresh_token (wts.models.RefreshToken): refresh token reference
+        commons_hostname (str): optional. name of the data commons, extracted from refresh token if absent.
 
     Return:
-        tuple: (commons_hostname(str), access_token(str))
+        tuple: (commons_hostname(str), access_token(str or None))
     """
-    commons_hostname = flask.current_app.config["OIDC"][refresh_token.idp][
-        "commons_hostname"
-    ]
+    if not refresh_token:
+        return commons_hostname, None
+
+    if not commons_hostname:
+        commons_hostname = flask.current_app.config["OIDC"][refresh_token.idp][
+            "commons_hostname"
+        ]
     access_token = None
     try:
         url, data, auth = get_data_for_fence_request(refresh_token)

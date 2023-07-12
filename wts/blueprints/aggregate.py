@@ -47,9 +47,16 @@ async def get_aggregate_response(endpoint):
     parameters = flask.request.args.to_dict()
     parameters.pop("filters", None)
 
+    # Initialzing refresh tokens with the keys of all the commons.
+    # This is needed to treat requests to un-connected commons as open access requests
+
+    refresh_tokens = {
+        commons: None for commons in flask.current_app.config["COMMONS_HOSTNAMES"]
+    }
+
     if flask.request.headers.get("Authorization"):
         authenticate(allow_access_token=True)
-        refresh_tokens = (
+        refresh_tokens_from_db = (
             db.session.query(RefreshToken)
             .filter_by(username=flask.g.user.username)
             .filter(RefreshToken.expires > int(time.time()))
@@ -61,18 +68,23 @@ async def get_aggregate_response(endpoint):
         #  if a user has multiple refresh tokens for the same commons, we want
         #  the latest one to be used. see
         #  https://stackoverflow.com/questions/39678672/is-a-python-dict-comprehension-always-last-wins-if-there-are-duplicate-keys
-        refresh_tokens = {
-            flask.current_app.config["OIDC"][rt.idp]["commons_hostname"]: rt
-            for rt in refresh_tokens
-        }
+        refresh_tokens.update(
+            {
+                flask.current_app.config["OIDC"][rt.idp]["commons_hostname"]: rt
+                for rt in refresh_tokens_from_db
+            }
+        )
 
         access_tokens = await asyncio.gather(
-            *[async_get_access_token(rt) for rt in refresh_tokens.values()]
+            *[
+                async_get_access_token(refresh_token, commons_hostname)
+                for commons_hostname, refresh_token in refresh_tokens.items()
+            ]
         )
         request_info = [
             (commons, endpoint, {"Authorization": f"Bearer {access_token}"})
             if access_token
-            else (commons, None, None)
+            else (commons, endpoint, {})
             for commons, access_token in access_tokens
         ]
     else:
