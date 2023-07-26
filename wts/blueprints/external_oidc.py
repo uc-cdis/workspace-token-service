@@ -9,13 +9,13 @@ from ..utils import get_config_var, get_oauth_client
 
 blueprint = flask.Blueprint("external_oidc", __name__)
 
-blueprint.route("")
-
 external_oidc_cache = {}
+blueprint.route("")
 
 
 # this is called every 10 sec by the Gen3Fuse sidecar
-@blueprint.route("", methods=["GET"])
+
+
 @blueprint.route("/", methods=["GET"])
 def get_external_oidc():
     """
