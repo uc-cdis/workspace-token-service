@@ -15,6 +15,7 @@ external_oidc_cache = {}
 
 
 # this is called every 10 sec by the Gen3Fuse sidecar
+@blueprint.route("", methods=["GET"])
 @blueprint.route("/", methods=["GET"])
 def get_external_oidc():
     """
