@@ -138,3 +138,8 @@ First, login to the commons: https://your.commons/user/login/google?redirect=htt
 
 Now try to acquire an access token for some idp:
 https://your.commons/wts/oauth2/authorization_url?idp=default
+
+### Quickstart with Helm
+
+You can now deploy individual services via Helm!
+Please refer to the Helm quickstart guide HERE (https://github.com/uc-cdis/workspace-token-service/blob/master/docs/img/quickstart_helm.md)

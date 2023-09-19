@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wts"
-version = "0.4.1"
+version = "0.4.3"
 description = "Workspace Token Service"
 authors = ["CTDS UChicago <cdis@uchicago.edu>"]
 license = "Apache-2.0"
