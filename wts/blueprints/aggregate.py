@@ -55,15 +55,25 @@ async def get_aggregate_response(endpoint):
     }
 
     if flask.request.headers.get("Authorization"):
-        authenticate(allow_access_token=True)
-        refresh_tokens_from_db = (
-            db.session.query(RefreshToken)
-            .filter_by(username=flask.g.user.username)
-            .filter(RefreshToken.expires > int(time.time()))
-            .order_by(RefreshToken.expires.asc())
-        )
-        # Release the db session as it is no longer needed
-        db.session.close()
+        flask.current_app.logger.info("Before session begin..")
+        flask.current_app.logger.info(db.engine.pool.status())
+
+        with db.session.begin():
+            flask.current_app.logger.info("After session begin..")
+            flask.current_app.logger.info(db.engine.pool.status())
+            authenticate(allow_access_token=True)
+            refresh_tokens_from_db = (
+                db.session.query(RefreshToken)
+                .filter_by(username=flask.g.user.username)
+                .filter(RefreshToken.expires > int(time.time()))
+                .order_by(RefreshToken.expires.asc())
+            )
+            # Release the db session as it is no longer needed
+            db.session.close()
+            flask.current_app.logger.info("After session close..")
+            flask.current_app.logger.info(db.engine.pool.status())
+        flask.current_app.logger.info("After context close..")
+        flask.current_app.logger.info(db.engine.pool.status())
 
         #  if a user has multiple refresh tokens for the same commons, we want
         #  the latest one to be used. see
