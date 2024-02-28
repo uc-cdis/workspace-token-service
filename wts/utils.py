@@ -46,8 +46,6 @@ def get_oauth_client(idp=None):
 
 
 def get_refresh_tokens_from_db():
-    flask.current_app.logger.info("Before session begin..")
-    flask.current_app.logger.info(db.engine.pool.status())
     try:
         refresh_tokens_from_db = (
             db.session.query(RefreshToken)
@@ -60,6 +58,4 @@ def get_refresh_tokens_from_db():
         flask.current_app.logger.info("After session close..")
         flask.current_app.logger.info(db.engine.pool.status())
 
-    flask.current_app.logger.info("After context close..")
-    flask.current_app.logger.info(db.engine.pool.status())
     return refresh_tokens_from_db
