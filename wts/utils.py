@@ -3,6 +3,8 @@ import json
 import os
 
 from cdiserrors import UserError
+from .models import db, RefreshToken
+import time
 
 
 def get_config_var(variable, default=None, secret_config={}):
@@ -41,3 +43,23 @@ def get_oauth_client(idp=None):
         )
         raise UserError('Requested IdP "{}" is not configured'.format(idp))
     return client
+
+
+def get_refresh_tokens_from_db():
+    flask.current_app.logger.info("Before session begin..")
+    flask.current_app.logger.info(db.engine.pool.status())
+    try:
+        refresh_tokens_from_db = (
+            db.session.query(RefreshToken)
+            .filter_by(username=flask.g.user.username)
+            .filter(RefreshToken.expires > int(time.time()))
+            .order_by(RefreshToken.expires.asc())
+        )
+    finally:
+        db.session.close()
+        flask.current_app.logger.info("After session close..")
+        flask.current_app.logger.info(db.engine.pool.status())
+
+    flask.current_app.logger.info("After context close..")
+    flask.current_app.logger.info(db.engine.pool.status())
+    return refresh_tokens_from_db

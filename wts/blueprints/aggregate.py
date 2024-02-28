@@ -7,7 +7,7 @@ from cdiserrors import NotFoundError, UserError
 from ..auth import authenticate
 from ..models import db, RefreshToken
 from ..tokens import async_get_access_token
-
+from ..utils import get_refresh_tokens_from_db
 
 blueprint = flask.Blueprint("aggregate", __name__)
 
@@ -55,26 +55,8 @@ async def get_aggregate_response(endpoint):
     }
 
     if flask.request.headers.get("Authorization"):
-        flask.current_app.logger.info("Before session begin..")
-        flask.current_app.logger.info(db.engine.pool.status())
-
-        with db.session.begin():
-            flask.current_app.logger.info("After session begin..")
-            flask.current_app.logger.info(db.engine.pool.status())
-            authenticate(allow_access_token=True)
-            refresh_tokens_from_db = (
-                db.session.query(RefreshToken)
-                .filter_by(username=flask.g.user.username)
-                .filter(RefreshToken.expires > int(time.time()))
-                .order_by(RefreshToken.expires.asc())
-            )
-            # Release the db session as it is no longer needed
-            db.session.close()
-            flask.current_app.logger.info("After session close..")
-            flask.current_app.logger.info(db.engine.pool.status())
-        flask.current_app.logger.info("After context close..")
-        flask.current_app.logger.info(db.engine.pool.status())
-
+        authenticate(allow_access_token=True)
+        refresh_tokens_from_db = get_refresh_tokens_from_db()
         #  if a user has multiple refresh tokens for the same commons, we want
         #  the latest one to be used. see
         #  https://stackoverflow.com/questions/39678672/is-a-python-dict-comprehension-always-last-wins-if-there-are-duplicate-keys
