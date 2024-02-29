@@ -35,7 +35,7 @@ async def get_aggregate_response(endpoint):
         flask.wrappers.Response: aggregate JSON response
 
     """
-
+    flask.current_app.logger.info("Handling aggregate response request..")
     # for `GET /aggregate/user/user`, flask sets endpoint to 'user/user'
     endpoint = "/" + endpoint.rstrip("/")
     if endpoint not in flask.current_app.config["AGGREGATE_ENDPOINT_ALLOWLIST"]:

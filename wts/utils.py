@@ -54,8 +54,18 @@ def get_refresh_tokens_from_db():
             .order_by(RefreshToken.expires.asc())
         )
     finally:
-        db.session.close()
+        cleanup(db.session)
         flask.current_app.logger.info("After session close..")
         flask.current_app.logger.info(db.engine.pool.status())
 
     return refresh_tokens_from_db
+
+
+def cleanup(session):
+    """
+    This method cleans up the session object and closes the connection pool using the dispose
+    method.
+    """
+    session.close()
+    engine_container = db.get_engine()
+    engine_container.dispose()
