@@ -54,9 +54,7 @@ def get_refresh_tokens_from_db():
             .order_by(RefreshToken.expires.asc())
         )
     finally:
-        cleanup(db.session)
-        flask.current_app.logger.info("After session close..")
-        flask.current_app.logger.info(db.engine.pool.status())
+        db.session.close()
 
     return refresh_tokens_from_db
 
