@@ -50,7 +50,7 @@ def get_authorization_url():
 
     requested_idp = flask.request.args.get("idp", "default")
     client = get_oauth_client(idp=requested_idp)
-    # This will be the value that was put in the ``metadata`` in config.
+    # This will be the value is in /wts/api.py
     state_prefix = client.metadata.get("state_prefix")
     authorize_url = client.metadata.get("authorize_url")
     print("This is the authorize_url: ", authorize_url)
