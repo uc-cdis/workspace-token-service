@@ -99,14 +99,14 @@ def generate_authorization_url(idp):
             refresh token for this IdP
     """
     wts_base_url = get_config_var("WTS_BASE_URL")
-    if "keycloak" in idp:
-        authorization_url = (
-            wts_base_url
-            + "auth/realms/qdr-oidc/protocol/openid-connect/auth?idp="
-            + idp
-        )
-    else:
-        authorization_url = wts_base_url + "oauth2/authorization_url?idp=" + idp
+    # if "keycloak" in idp:
+    #     authorization_url = (
+    #         wts_base_url
+    #         + "auth/realms/qdr-oidc/protocol/openid-connect/auth?idp="
+    #         + idp
+    #     )
+    # else:
+    authorization_url = wts_base_url + "oauth2/authorization_url?idp=" + idp
     return authorization_url
 
 

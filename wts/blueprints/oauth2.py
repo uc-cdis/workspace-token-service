@@ -53,6 +53,7 @@ def get_authorization_url():
     # This will be the value that was put in the ``metadata`` in config.
     state_prefix = client.metadata.get("state_prefix")
     authorize_url = client.metadata.get("authorize_url")
+    print("This is the authorize_url: ", authorize_url)
     state = generate_token()
     if state_prefix:
         state = state_prefix + "-" + state
