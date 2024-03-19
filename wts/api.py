@@ -78,10 +78,12 @@ def load_settings(app):
             state_prefix = ""
 
         for idp, idp_conf in conf.get("login_options", {}).items():
+            scope = "openid data user"
             if "keycloak" in idp:
                 authorization_url = (
-                    url + "/auth/realms/qdr-oidc/protocol/openid-connect/auth "
+                    url + "/auth/realms/qdr-oidc/protocol/openid-connect/auth"
                 )
+                scope = "openid profile offline_access"
             else:
                 authorization_url = fence_base_url + "oauth2/authorize"
 
@@ -96,7 +98,7 @@ def load_settings(app):
                 "authorize_url": authorization_url,
                 "access_token_url": fence_base_url + "oauth2/token",
                 "redirect_uri": redirect_uri,
-                "scope": "openid data user",
+                "scope": scope,
                 "state_prefix": state_prefix,
             }
 
