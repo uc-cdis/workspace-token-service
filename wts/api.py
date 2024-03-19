@@ -69,10 +69,7 @@ def load_settings(app):
 
     for conf in get_var("EXTERNAL_OIDC", []):
         url = get_var("BASE_URL", secret_config=conf)
-        if "keycloak" in idp:
-            fence_base_url = url if url.endswith("/") else (url + "/")
-        else:
-            fence_base_url = (url if url.endswith("/") else (url + "/")) + "user/"
+        fence_base_url = (url if url.endswith("/") else (url + "/")) + "user/"
         # can redirect authorize callbacks to a shared central authorizer
         redirect_uri = get_var("REDIRECT_URI", default="", secret_config=conf)
         state_prefix = wts_hostname or ""
@@ -83,8 +80,7 @@ def load_settings(app):
         for idp, idp_conf in conf.get("login_options", {}).items():
             if "keycloak" in idp:
                 authorization_url = (
-                    fence_base_url
-                    + "auth/realms/qdr-oidc/protocol/openid-connect/auth "
+                    url + "/auth/realms/qdr-oidc/protocol/openid-connect/auth "
                 )
             else:
                 authorization_url = fence_base_url + "oauth2/authorize"
