@@ -15,7 +15,10 @@ def client_do_authorize():
     client = get_oauth_client(idp=requested_idp)
     token_url = client.metadata["access_token_url"]
     print(
-        "=======================================  Getting here token_url: ", token_url
+        "=======================================  Getting here token_url: ",
+        token_url,
+        " requested idp: ",
+        requested_idp,
     )
     mismatched_state = (
         "state" not in flask.request.args
@@ -25,11 +28,14 @@ def client_do_authorize():
     if mismatched_state:
         raise AuthError("could not authorize; state did not match across auth requests")
     try:
-        tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
-        print(
-            "=======================================  Getting here we have gotten the token: ",
-            tokens,
-        )
+        if "keycloak" in requested_idp:
+            tokens = client.fetch_token(token_url)
+            print(
+                "=======================================  Getting here we have gotten the token: ",
+                tokens,
+            )
+        else:
+            tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
 
         refresh_refresh_token(tokens, requested_idp)
     except KeyError as e:
