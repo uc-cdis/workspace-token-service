@@ -14,6 +14,9 @@ def client_do_authorize():
     requested_idp = flask.session.get("idp", "default")
     client = get_oauth_client(idp=requested_idp)
     token_url = client.metadata["access_token_url"]
+    print(
+        "=======================================  Getting here token_url: ", token_url
+    )
     mismatched_state = (
         "state" not in flask.request.args
         or "state" not in flask.session
@@ -23,6 +26,11 @@ def client_do_authorize():
         raise AuthError("could not authorize; state did not match across auth requests")
     try:
         tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
+        print(
+            "=======================================  Getting here we have gotten the token: ",
+            tokens,
+        )
+
         refresh_refresh_token(tokens, requested_idp)
     except KeyError as e:
         raise AuthError("error in token response: {}".format(tokens))
