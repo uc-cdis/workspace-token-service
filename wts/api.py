@@ -84,8 +84,12 @@ def load_settings(app):
                     url + "/auth/realms/qdr-oidc/protocol/openid-connect/auth"
                 )
                 scope = "openid profile offline_access"
+                access_token_url = (
+                    url + "/auth/relms/qdr-oidc/protocol/openid-connect/token"
+                )
             else:
                 authorization_url = fence_base_url + "oauth2/authorize"
+                access_token_url = fence_base_url + "oauth2/token"
 
             authorization_url = add_params_to_uri(
                 authorization_url, idp_conf.get("params", {})
@@ -96,7 +100,7 @@ def load_settings(app):
                 "commons_hostname": urlparse(fence_base_url).netloc,
                 "api_base_url": fence_base_url,
                 "authorize_url": authorization_url,
-                "access_token_url": fence_base_url + "oauth2/token",
+                "access_token_url": access_token_url,
                 "redirect_uri": redirect_uri,
                 "scope": scope,
                 "state_prefix": state_prefix,

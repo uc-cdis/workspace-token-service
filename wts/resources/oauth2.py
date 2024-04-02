@@ -28,14 +28,14 @@ def client_do_authorize():
     if mismatched_state:
         raise AuthError("could not authorize; state did not match across auth requests")
     try:
-        if "keycloak" in requested_idp:
-            tokens = client.fetch_token(token_url)
-            print(
-                "=======================================  Getting here we have gotten the token: ",
-                tokens,
-            )
-        else:
-            tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
+        # if "keycloak" in requested_idp:
+        #     tokens = client.fetch_token(token_url)
+        # else:
+        tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
+        print(
+            "=======================================  Getting here we have gotten the token: ",
+            tokens,
+        )
 
         refresh_refresh_token(tokens, requested_idp)
     except KeyError as e:
