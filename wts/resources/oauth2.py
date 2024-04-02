@@ -32,11 +32,7 @@ def client_do_authorize():
         raise AuthError("could not authorize; state did not match across auth requests")
     try:
         if "keycloak" in requested_idp:
-            tokens = client.fetch_token(
-                token_url,
-                **flask.request.args.to_dict(),
-                grant_type="authorization_code"
-            )
+            tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
         else:
             tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
         print(
