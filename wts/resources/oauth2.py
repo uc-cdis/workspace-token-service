@@ -25,13 +25,16 @@ def client_do_authorize():
         or "state" not in flask.session
         or flask.request.args["state"] != flask.session.pop("state")
     )
+
+    print(" ||||||||||||||||||||| flask args: ", flas.request.args)
+
     if mismatched_state:
         raise AuthError("could not authorize; state did not match across auth requests")
     try:
-        # if "keycloak" in requested_idp:
-        #     tokens = client.fetch_token(token_url)
-        # else:
-        tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
+        if "keycloak" in requested_idp:
+            tokens = client.fetch_token(token_url, grant_type="client_credentials")
+        else:
+            tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
         print(
             "=======================================  Getting here we have gotten the token: ",
             tokens,

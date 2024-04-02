@@ -83,7 +83,7 @@ def load_settings(app):
                 authorization_url = (
                     url + "auth/realms/qdr-oidc/protocol/openid-connect/auth"
                 )
-                scope = "openid offline_access"
+                scope = "openid profile offline_access"
                 access_token_url = (
                     url + "auth/relms/qdr-oidc/protocol/openid-connect/token"
                 )
