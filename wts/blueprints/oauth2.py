@@ -53,7 +53,6 @@ def get_authorization_url():
     # This will be the value is in /wts/api.py
     state_prefix = client.metadata.get("state_prefix")
     authorize_url = client.metadata.get("authorize_url")
-    print("This is the authorize_url: ", authorize_url)
     state = generate_token()
     if state_prefix:
         state = state_prefix + "-" + state
@@ -64,6 +63,8 @@ def get_authorization_url():
     )
     flask.session["state"] = state
     flask.session["idp"] = requested_idp
+    print("////////////////////This is the authorize_url: ", authorize_url)
+    print("////////////////////This is the authorization state: ", state)
     return flask.redirect(authorization_url)
 
 
