@@ -85,7 +85,7 @@ def load_settings(app):
                 )
                 scope = "openid profile offline_access"
                 access_token_url = (
-                    url + "auth/relms/qdr-oidc/protocol/openid-connect/token"
+                    url + "auth/realms/qdr-oidc/protocol/openid-connect/token"
                 )
             else:
                 authorization_url = fence_base_url + "oauth2/authorize"
