@@ -101,11 +101,18 @@ def refresh_refresh_token(tokens, idp):
     user = current_user
     username = user.username
 
-    flask.current_app.logger.info(
-        'Linking username "{}" for IdP "{}" to current user "{}"'.format(
-            id_token["context"]["user"]["name"], idp, username
+    if "keycloak" in idp:
+        flask.current_app.logger.info(
+            'Linking username "{}" for IdP "{}" to current user "{}"'.format(
+                id_token["email"], idp, username
+            )
         )
-    )
+    else:
+        flask.current_app.logger.info(
+            'Linking username "{}" for IdP "{}" to current user "{}"'.format(
+                id_token["context"]["user"]["name"], idp, username
+            )
+        )
     new_token = RefreshToken(
         token=refresh_token,
         userid=userid,
