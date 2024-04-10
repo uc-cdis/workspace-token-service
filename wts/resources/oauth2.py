@@ -107,21 +107,19 @@ def refresh_refresh_token(tokens, idp):
                 id_token["email"], idp, username
             )
         )
-        exp = tokens["expires_at"]
     else:
         flask.current_app.logger.info(
             'Linking username "{}" for IdP "{}" to current user "{}"'.format(
                 id_token["context"]["user"]["name"], idp, username
             )
         )
-        exp = content["exp"]
 
     new_token = RefreshToken(
         token=refresh_token,
         userid=userid,
         username=username,
         jti=content["jti"],
-        expires=exp,
+        expires=content["exp"],
         idp=idp,
     )
     db.session.add(new_token)
