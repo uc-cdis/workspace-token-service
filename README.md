@@ -76,6 +76,22 @@ Two methods exist for authenticating a request to the `/token` endpoint:
                 ...
             }
         },
+        {
+            "base_url": "https://non-fence-data.org/",
+            "oidc_client_id": "xxx",
+            "oidc_client_secret": "xxx",
+            "login_options": {
+                "externaldata-keycloak": {
+                    "name": "keycloak Login",
+                    "params": {
+                        "idp": "keycloak",
+                        "auth_url": "auth/realms/xyz/protocol/openid-connect/auth",
+                        "token_url": "auth/realms/xyz/protocol/openid-connect/token",
+                        "scope": "openid profile offline_access"
+                   }
+                }
+            }
+        },
         ...
     ]
 }
@@ -88,10 +104,12 @@ Note that IDP IDs (`other-google` and `other-orcid` in the example above) must b
 Also note that the OIDC clients you create must be granted `read-storage` access to all the data in the external
 Data Commons via the data-commons' `user.yaml`.
 
-Finally, the `redirect_uri` property for external OIDC providers is
+The `redirect_uri` property for external OIDC providers is
 an optional field that supports sharing OIDC client
 configuration between multiple workspace deployments
 as part of a multi-account application system.
+
+Finally, non fence IDPs can be provided given their auth url, token url, and necessary scope as a part part of the `params` of the external IDP.
 
 The key `aggregate_endpoint_allowlist` is an optional key which consists of a list of endpoints that are supported by the `/aggregate` api.
 
