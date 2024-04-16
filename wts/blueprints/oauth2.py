@@ -63,8 +63,6 @@ def get_authorization_url():
     )
     flask.session["state"] = state
     flask.session["idp"] = requested_idp
-    print("////////////////////This is the authorize_url: ", authorization_url)
-    print("////////////////////This is the authorization state: ", state)
     return flask.redirect(authorization_url)
 
 

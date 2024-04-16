@@ -14,32 +14,16 @@ def client_do_authorize():
     requested_idp = flask.session.get("idp", "default")
     client = get_oauth_client(idp=requested_idp)
     token_url = client.metadata["access_token_url"]
-    print(
-        "=======================================  Getting here token_url: ",
-        token_url,
-        " requested idp: ",
-        requested_idp,
-    )
     mismatched_state = (
         "state" not in flask.request.args
         or "state" not in flask.session
         or flask.request.args["state"] != flask.session.pop("state")
     )
 
-    print(" ||||||||||||||||||||| flask args: ", flask.request.args)
-
     if mismatched_state:
         raise AuthError("could not authorize; state did not match across auth requests")
     try:
-        if "keycloak" in requested_idp:
-            tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
-        else:
-            tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
-        print(
-            "=======================================  Getting here we have gotten the token: ",
-            tokens,
-        )
-
+        tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
         refresh_refresh_token(tokens, requested_idp)
     except KeyError as e:
         raise AuthError("error in token response: {}".format(tokens))
@@ -102,18 +86,15 @@ def refresh_refresh_token(tokens, idp):
     username = user.username
 
     if "keycloak" in idp:
-        flask.current_app.logger.info(
-            'Linking username "{}" for IdP "{}" to current user "{}"'.format(
-                id_token["email"], idp, username
-            )
-        )
+        idp_username = id_token["email"]
     else:
-        flask.current_app.logger.info(
-            'Linking username "{}" for IdP "{}" to current user "{}"'.format(
-                id_token["context"]["user"]["name"], idp, username
-            )
-        )
+        idp_username = id_token["context"]["user"]["name"]
 
+    flask.current_app.logger.info(
+        'Linking username "{}" for IdP "{}" to current user "{}"'.format(
+            idp_username, idp, username
+        )
+    )
     new_token = RefreshToken(
         token=refresh_token,
         userid=userid,
