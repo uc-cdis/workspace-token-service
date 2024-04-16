@@ -85,14 +85,13 @@ def load_settings(app):
                 auth_endpoint = idp_params.get("auth_url")
                 token_endpoint = idp_params.get("token_url")
                 scope = idp_params.get("token_url", scope)
-                # authorization_url = get_var("OIDC_AUTH_URL", secret_config=conf)
-                # access_token_url = get_var("OIDC_TOKEN_URL", secret_config=conf)
-                # scope = get_var("OIDC_SCOPE", default=scope, secret_config=conf)
+                authorization_url = url + auth_endpoint
+                access_token_url = url + token_endpoint
+
                 print("=================================================")
                 print("these are the parameters of the idp: ", idp_conf.get("params"))
-                authorization_url = url + auth_endpoint
-                # scope = "openid profile offline_access"
-                access_token_url = url + token_endpoint
+                print("auth url: ", authorization_url)
+                print("token url: ", access_token_url)
             else:
                 authorization_url = fence_base_url + "oauth2/authorize"
                 access_token_url = fence_base_url + "oauth2/token"
