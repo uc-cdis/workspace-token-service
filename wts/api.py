@@ -95,11 +95,6 @@ def load_settings(app):
                     authorization_url, idp_conf.get("params", {})
                 )
 
-            print("=================================================")
-            print("these are the parameters of the idp: ", idp_conf.get("params"))
-            print("auth url: ", authorization_url)
-            print("token url: ", access_token_url)
-            print("scope: ", scope)
             app.config["OIDC"][idp] = {
                 "client_id": get_var("OIDC_CLIENT_ID", secret_config=conf),
                 "client_secret": get_var("OIDC_CLIENT_SECRET", secret_config=conf),
