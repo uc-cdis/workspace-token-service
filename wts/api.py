@@ -84,7 +84,7 @@ def load_settings(app):
             if idp_client == "keycloak":
                 auth_endpoint = idp_params.get("auth_url")
                 token_endpoint = idp_params.get("token_url")
-                scope = idp_params.get("token_url", scope)
+                scope = idp_params.get("scope", scope)
                 authorization_url = url + auth_endpoint + "?idp=" + idp_client
                 access_token_url = url + token_endpoint
 
@@ -99,6 +99,7 @@ def load_settings(app):
             print("these are the parameters of the idp: ", idp_conf.get("params"))
             print("auth url: ", authorization_url)
             print("token url: ", access_token_url)
+            print("scope: ", scope)
             app.config["OIDC"][idp] = {
                 "client_id": get_var("OIDC_CLIENT_ID", secret_config=conf),
                 "client_secret": get_var("OIDC_CLIENT_SECRET", secret_config=conf),
