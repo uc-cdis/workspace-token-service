@@ -91,10 +91,10 @@ def load_settings(app):
             else:
                 authorization_url = fence_base_url + "oauth2/authorize"
                 access_token_url = fence_base_url + "oauth2/token"
+                authorization_url = add_params_to_uri(
+                    authorization_url, idp_conf.get("params", {})
+                )
 
-            authorization_url = add_params_to_uri(
-                authorization_url, idp_conf.get("params", {})
-            )
             print("=================================================")
             print("these are the parameters of the idp: ", idp_conf.get("params"))
             print("auth url: ", authorization_url)
