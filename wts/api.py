@@ -88,10 +88,6 @@ def load_settings(app):
                 authorization_url = url + auth_endpoint
                 access_token_url = url + token_endpoint
 
-                print("=================================================")
-                print("these are the parameters of the idp: ", idp_conf.get("params"))
-                print("auth url: ", authorization_url)
-                print("token url: ", access_token_url)
             else:
                 authorization_url = fence_base_url + "oauth2/authorize"
                 access_token_url = fence_base_url + "oauth2/token"
@@ -99,6 +95,10 @@ def load_settings(app):
             authorization_url = add_params_to_uri(
                 authorization_url, idp_conf.get("params", {})
             )
+            print("=================================================")
+            print("these are the parameters of the idp: ", idp_conf.get("params"))
+            print("auth url: ", authorization_url)
+            print("token url: ", access_token_url)
             app.config["OIDC"][idp] = {
                 "client_id": get_var("OIDC_CLIENT_ID", secret_config=conf),
                 "client_secret": get_var("OIDC_CLIENT_SECRET", secret_config=conf),
