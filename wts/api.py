@@ -81,14 +81,15 @@ def load_settings(app):
             scope = "openid data user"
             idp_params = idp_conf.get("params", {})
             idp_client = idp_params.get("idp", "")
-            if idp_client == "keycloak":
+
+            if "auth_url" in idp_params and "token_url" in idp_params:  # Generic OIDC
                 auth_endpoint = idp_params.get("auth_url")
                 token_endpoint = idp_params.get("token_url")
                 scope = idp_params.get("scope", scope)
                 authorization_url = url + auth_endpoint + "?idp=" + idp_client
                 access_token_url = url + token_endpoint
 
-            else:
+            else:  # Default Gen3 Fence Integration
                 authorization_url = fence_base_url + "oauth2/authorize"
                 access_token_url = fence_base_url + "oauth2/token"
                 authorization_url = add_params_to_uri(
