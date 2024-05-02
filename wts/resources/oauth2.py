@@ -21,6 +21,8 @@ def client_do_authorize():
         or flask.request.args["state"] != flask.session.pop("state")
     )
 
+    print("DEBUG ===================== oauth client  metadata: ", client.metadata)
+
     if mismatched_state:
         raise AuthError("could not authorize; state did not match across auth requests")
     try:

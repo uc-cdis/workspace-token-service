@@ -104,6 +104,7 @@ def load_settings(app):
                 "client_secret": get_var("OIDC_CLIENT_SECRET", secret_config=conf),
                 "commons_hostname": urlparse(fence_base_url).netloc,
                 "api_base_url": fence_base_url,
+                "username_field": username_field,
                 "authorize_url": authorization_url,
                 "access_token_url": access_token_url,
                 "redirect_uri": redirect_uri,
