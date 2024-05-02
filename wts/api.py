@@ -87,7 +87,6 @@ def load_settings(app):
                 auth_endpoint = idp_params.get("auth_url")
                 token_endpoint = idp_params.get("token_url")
                 username_field = idp_params.get("id_token_username_field", "")
-
                 scope = idp_params.get("scope", scope)
                 authorization_url = url + auth_endpoint + "?idp=" + idp_client
                 access_token_url = url + token_endpoint
