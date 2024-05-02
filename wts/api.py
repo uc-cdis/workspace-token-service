@@ -62,6 +62,7 @@ def load_settings(app):
         "authorize_url": fence_base_url + "oauth2/authorize",
         "access_token_url": fence_base_url + "oauth2/token",
         "redirect_uri": wts_base_url + "oauth2/authorize",
+        "username_field": "context.user.name",
         "scope": "openid data user",
         "state_prefix": "",
     }
@@ -85,6 +86,8 @@ def load_settings(app):
             if "auth_url" in idp_params and "token_url" in idp_params:  # Generic OIDC
                 auth_endpoint = idp_params.get("auth_url")
                 token_endpoint = idp_params.get("token_url")
+                username_field = idp_params.get("id_token_username_field", "")
+
                 scope = idp_params.get("scope", scope)
                 authorization_url = url + auth_endpoint + "?idp=" + idp_client
                 access_token_url = url + token_endpoint
@@ -92,6 +95,7 @@ def load_settings(app):
             else:  # Default Gen3 Fence Integration
                 authorization_url = fence_base_url + "oauth2/authorize"
                 access_token_url = fence_base_url + "oauth2/token"
+                username_field = "context.user.name"
                 authorization_url = add_params_to_uri(
                     authorization_url, idp_conf.get("params", {})
                 )

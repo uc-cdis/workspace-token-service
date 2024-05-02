@@ -14,19 +14,18 @@ def client_do_authorize():
     requested_idp = flask.session.get("idp", "default")
     client = get_oauth_client(idp=requested_idp)
     token_url = client.metadata["access_token_url"]
+    username_field = client.metadata["username_field"]
     mismatched_state = (
         "state" not in flask.request.args
         or "state" not in flask.session
         or flask.request.args["state"] != flask.session.pop("state")
     )
 
-    print("DEBUG ===================== oauth client : ", client)
-
     if mismatched_state:
         raise AuthError("could not authorize; state did not match across auth requests")
     try:
         tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
-        refresh_refresh_token(tokens, requested_idp)
+        refresh_refresh_token(tokens, requested_idp, username_field)
     except KeyError as e:
         raise AuthError("error in token response: {}".format(tokens))
     except AuthlibBaseError as e:
@@ -46,7 +45,7 @@ def find_valid_refresh_token(username, idp):
     return has_valid
 
 
-def refresh_refresh_token(tokens, idp):
+def refresh_refresh_token(tokens, idp, username_field):
     """
     store new refresh token in db and purge all old tokens for the user
     """
@@ -62,8 +61,6 @@ def refresh_refresh_token(tokens, idp):
         "verify_at_hash": False,
         "leeway": 0,
     }
-
-    print("DEBUG ===================== this is the idp: ", idp)
 
     refresh_token = tokens["refresh_token"]
     id_token = tokens["id_token"]
@@ -90,10 +87,10 @@ def refresh_refresh_token(tokens, idp):
     user = current_user
     username = user.username
 
-    if "keycloak" in idp:
-        idp_username = id_token["email"]
-    else:
-        idp_username = id_token["context"]["user"]["name"]
+    idp_username = id_token
+    # username field is written like "context.user.name" so we split it and loop through the segments
+    for field in username_field.split("."):
+        idp_username = idp_username.get(field)
 
     flask.current_app.logger.info(
         'Linking username "{}" for IdP "{}" to current user "{}"'.format(
