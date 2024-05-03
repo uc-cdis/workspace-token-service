@@ -14,14 +14,16 @@ def client_do_authorize():
     requested_idp = flask.session.get("idp", "default")
     client = get_oauth_client(idp=requested_idp)
     token_url = client.metadata["access_token_url"]
+
+    # username_field is defined for external oidc clients but it defaults
+    # to context.user.name for fence clients
     username_field = client.metadata["username_field"]
+
     mismatched_state = (
         "state" not in flask.request.args
         or "state" not in flask.session
         or flask.request.args["state"] != flask.session.pop("state")
     )
-
-    print("DEBUG ===================== oauth client  metadata: ", client.metadata)
 
     if mismatched_state:
         raise AuthError("could not authorize; state did not match across auth requests")

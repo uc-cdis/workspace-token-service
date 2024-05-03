@@ -4,7 +4,7 @@ from cryptography.fernet import Fernet
 import flask
 from flask import Flask
 import json
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 from cdislogging import get_logger
 from cdiserrors import APIError
 
@@ -59,9 +59,9 @@ def load_settings(app):
         "client_secret": get_var("OIDC_CLIENT_SECRET"),
         "commons_hostname": urlparse(fence_base_url).netloc,
         "api_base_url": fence_base_url,
-        "authorize_url": fence_base_url + "oauth2/authorize",
-        "access_token_url": fence_base_url + "oauth2/token",
-        "redirect_uri": wts_base_url + "oauth2/authorize",
+        "authorize_url": urljoin(fence_base_url, "oauth2/authorize"),
+        "access_token_url": urljoin(fence_base_url, "oauth2/token"),
+        "redirect_uri": urljoin(wts_base_url, "oauth2/authorize"),
         "username_field": "context.user.name",
         "scope": "openid data user",
         "state_prefix": "",
@@ -75,7 +75,7 @@ def load_settings(app):
         redirect_uri = get_var("REDIRECT_URI", default="", secret_config=conf)
         state_prefix = wts_hostname or ""
         if not redirect_uri:
-            redirect_uri = wts_base_url + "oauth2/authorize"
+            redirect_uri = urljoin(wts_base_url, "oauth2/authorize")
             state_prefix = ""
 
         for idp, idp_conf in conf.get("login_options", {}).items():
@@ -88,12 +88,12 @@ def load_settings(app):
                 token_endpoint = idp_params.get("token_url")
                 username_field = idp_params.get("id_token_username_field", "")
                 scope = idp_params.get("scope", scope)
-                authorization_url = url + auth_endpoint + "?idp=" + idp_client
-                access_token_url = url + token_endpoint
+                authorization_url = urljoin(url, auth_endpoint)
+                access_token_url = urljoin(url, token_endpoint)
 
             else:  # Default Gen3 Fence Integration
-                authorization_url = fence_base_url + "oauth2/authorize"
-                access_token_url = fence_base_url + "oauth2/token"
+                authorization_url = urljoin(fence_base_url, "oauth2/authorize")
+                access_token_url = urljoin(fence_base_url, "oauth2/token")
                 username_field = "context.user.name"
                 authorization_url = add_params_to_uri(
                     authorization_url, idp_conf.get("params", {})
