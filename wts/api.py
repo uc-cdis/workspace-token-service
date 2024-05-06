@@ -81,12 +81,11 @@ def load_settings(app):
         for idp, idp_conf in conf.get("login_options", {}).items():
             scope = "openid data user"
             idp_params = idp_conf.get("params", {})
-            idp_client = idp_params.get("idp", "")
 
             if "auth_url" in idp_params and "token_url" in idp_params:  # Generic OIDC
                 auth_endpoint = idp_params.get("auth_url")
                 token_endpoint = idp_params.get("token_url")
-                username_field = idp_params.get("id_token_username_field", "")
+                username_field = idp_params.get("id_token_username_field", "email")
                 scope = idp_params.get("scope", scope)
                 authorization_url = urljoin(url, auth_endpoint)
                 access_token_url = urljoin(url, token_endpoint)
