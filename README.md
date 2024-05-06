@@ -87,7 +87,7 @@ Two methods exist for authenticating a request to the `/token` endpoint:
                         "idp": "keycloak",
                         "auth_url": "auth/realms/xyz/protocol/openid-connect/auth",
                         "token_url": "auth/realms/xyz/protocol/openid-connect/token",
-                        "id_token_username": "email"
+                        "id_token_username": "email",
                         "scope": "openid profile offline_access"
                    }
                 }
