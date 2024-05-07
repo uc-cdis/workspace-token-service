@@ -202,6 +202,18 @@ def refresh_tokens_json(test_user, other_user):
                 "expires": now - 100,  # expired
             }
         ],
+        "externaldata-keycloak": [
+            {
+                "username": test_user.username,
+                "userid": test_user.userid,
+                "refresh_token": "eyJhbGciOiJ.6",
+            },
+            {
+                "username": other_user.username,
+                "userid": other_user.userid,
+                "refresh_token": "eyJhbGciOiJ.7",
+            },
+        ],
     }
 
 

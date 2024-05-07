@@ -87,6 +87,8 @@ def test_authorize_endpoint(client, test_user, db_session, auth_header):
         {"refresh_token": fake_tokens["default"], "id_token": "eyJhbGciOiJ"},
         # returned object for IdP "idp_a":
         {"refresh_token": fake_tokens["idp_a"], "id_token": "eyJhbGciOiJ"},
+        # returned object for IdP "idp_a":
+        {"refresh_token": fake_tokens["idp_a"], "id_token": "eyJhbGciOiJ"},
     ]
     patched_fetch_access_token = mock.patch(
         "authlib.oauth2.client.OAuth2Client.fetch_token", mocked_response
@@ -199,12 +201,12 @@ def test_app_config(app):
         == "https://workspace.planx-pla.net/wts-callback"
     )
     assert app.config["OIDC"]["idp_a"]["username_field"] == "context.user.name"
+    assert app.config["OIDC"]["idp_a"]["state_prefix"] == "test"
     assert (
         app.config["OIDC"]["externaldata-keycloak"]["authorize_url"]
-        == "https://non-fence-data.org/auth/realms/xyz/protocol/openid-connect/auth"
+        == "https://some.data.commons/auth/realms/xyz/protocol/openid-connect/auth"
     )
     assert app.config["OIDC"]["externaldata-keycloak"]["username_field"] == "email"
-    assert app.config["OIDC"]["idp_a"]["state_prefix"] == "test"
     assert (
         app.config["OIDC"]["default"]["redirect_uri"]
         == "https://test.workspace.planx-pla.net/wts/oauth2/authorize"

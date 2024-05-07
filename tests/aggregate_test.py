@@ -152,7 +152,7 @@ def test_aggregate_authz_mapping_endpoint_with_no_connected_commons(
     """
     res = client.get("/aggregate/authz/mapping", headers=auth_header)
     assert res.status_code == 200
-    assert len(res.json) == 2
+    assert len(res.json) == 3
 
     default_commons_hostname = app.config["OIDC"]["default"]["commons_hostname"]
     assert default_commons_hostname in res.json
@@ -180,7 +180,7 @@ def test_aggregate_authz_mapping_endpoint_with_connected_commons(
     """
     res = client.get("/aggregate/authz/mapping", headers=auth_header)
     assert res.status_code == 200
-    assert len(res.json) == 2
+    assert len(res.json) == 3
 
     default_commons_hostname = app.config["OIDC"]["default"]["commons_hostname"]
     assert default_commons_hostname in res.json
