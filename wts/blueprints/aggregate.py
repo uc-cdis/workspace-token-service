@@ -145,6 +145,11 @@ async def make_request(commons_hostname, endpoint, headers, parameters, filters)
             )
         )
         return failure_indicator
+    except Exception as e:
+        flask.current_app.logger.error(
+            "Failed to get response from {}.".format(endpoint_url)
+        )
+        return failure_indicator
 
     data = endpoint_response.json()
     if filters:

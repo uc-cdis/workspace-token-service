@@ -9,6 +9,7 @@ from .conftest import (
     assert_authz_mapping_for_user_without_access_token,
 )
 
+
 def get_number_of_configured_idps():
     with open(os.environ["SECRET_CONFIG"], "r") as f:
         external_idps = json.load(f)["external_oidc"]

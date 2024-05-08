@@ -202,18 +202,6 @@ def refresh_tokens_json(test_user, other_user):
                 "expires": now - 100,  # expired
             }
         ],
-        "externaldata-keycloak": [
-            {
-                "username": test_user.username,
-                "userid": test_user.userid,
-                "refresh_token": "eyJhbGciOiJ.6",
-            },
-            {
-                "username": other_user.username,
-                "userid": other_user.userid,
-                "refresh_token": "eyJhbGciOiJ.7",
-            },
-        ],
     }
 
 
@@ -290,11 +278,19 @@ def mock_requests(
             )
 
         def get_fence_user_side_effect(request):
-            access_token = request.headers["Authorization"].split(" ")[1]
-            assert access_token in access_token_to_authz_resource
-            return httpx.Response(
-                200,
-                json={
+            access_token = request.headers.get("Authorization", "").split(" ")
+            access_token = access_token[1] if len(access_token) > 0 else ""
+            if access_token not in access_token_to_authz_resource:
+                print(
+                    "Mocked request '/user/user': no access token was provided. Assuming anonymous; returning empty access."
+                )
+                data = {
+                    "authz": {},
+                    "is_admin": False,
+                    "role": "user",
+                }
+            else:
+                data = {
                     "authz": {
                         access_token_to_authz_resource[access_token]: [
                             {"method": "read", "service": "*"}
@@ -303,8 +299,8 @@ def mock_requests(
                     },
                     "is_admin": True,
                     "role": "admin",
-                },
-            )
+                }
+            return httpx.Response(200, json=data)
 
         def get_arborist_authz_side_effect(request):
             access_token = (
@@ -323,19 +319,19 @@ def mock_requests(
             for idp_config in app.config["OIDC"].values():
                 fence_url = idp_config["api_base_url"].rstrip("/")
 
-                fence_token_url = f"{fence_url}/oauth2/token"
-                respx_mock.post(fence_token_url).mock(
+                # mock getting tokens
+                respx_mock.post(f"{fence_url}/oauth2/token").mock(
                     side_effect=post_fence_token_side_effect
                 )
+                respx_mock.post(
+                    "https://external.data.repository/auth/realms/xyz/protocol/openid-connect/token"
+                ).mock(side_effect=post_fence_token_side_effect)
 
-                # mock getting token for `externaldata-keycloak` IDP
-                other_token_url = "https://external.data.repository/auth/realms/xyz/protocol/openid-connect/token"
-                respx_mock.post(other_token_url).mock(
-                    side_effect=post_fence_token_side_effect
+                # mock userinfo endpoint
+                respx_mock.get(f"{fence_url}/user").mock(
+                    side_effect=get_fence_user_side_effect
                 )
-
-                fence_user_info_url = f"{fence_url}/user"
-                respx_mock.get(fence_user_info_url).mock(
+                respx_mock.get("https://external.data.repository/user/user").mock(
                     side_effect=get_fence_user_side_effect
                 )
 
