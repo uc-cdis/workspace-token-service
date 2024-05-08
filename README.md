@@ -105,10 +105,17 @@ Note that IDP IDs (`other-google` and `other-orcid` in the example above) must b
 Also note that the OIDC clients you create must be granted `read-storage` access to all the data in the external
 Data Commons via the data-commons' `user.yaml`.
 
+The `id_token_username` property for OIDC clients can be configured with `.` in between strings for a nested username inside a token.
+For example if the token jwt has username encoded in the json as `token["context"]["user"]["name"]`.
+We can write this in the paramaters as `"id_token_username": "context.user.name"`
+The default if nothing is specified for a fence client it defaults to `"context.user.name"` for a non-fence client the default is `"email"`
+
+
 The `redirect_uri` property for external OIDC providers is
 an optional field that supports sharing OIDC client
 configuration between multiple workspace deployments
 as part of a multi-account application system.
+
 
 Finally, non fence IDPs can be provided given their auth url, token url, and necessary scope as a part part of the `params` of the external IDP.
 
