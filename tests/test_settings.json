@@ -19,7 +19,15 @@
                 "idp_b": {
                     "name": "IDP B",
                     "params": {"idp": "fence", "fence_idp": "shibboleth"}
-                },
+                }
+            }
+        },
+        {
+            "base_url": "https://external.data.repository",
+            "oidc_client_id": "test3",
+            "oidc_client_secret": "test3",
+            "redirect_uri": "https://workspace.planx-pla.net/wts-callback",
+            "login_options": {
                 "externaldata-keycloak": {
                     "name": "keycloak Login",
                     "params": {

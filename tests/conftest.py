@@ -269,7 +269,7 @@ def mock_requests(
     - obtaining JWT keys from Fence
     - Fence's user info endpoint
     Mock POST requests for:
-    - getting an access token from Fence using a refresh token
+    - getting an access token from Fence (and others) using a refresh token
     """
     access_token_to_authz_resource = {}
     for refresh_tokens in refresh_tokens_json.values():
@@ -325,6 +325,12 @@ def mock_requests(
 
                 fence_token_url = f"{fence_url}/oauth2/token"
                 respx_mock.post(fence_token_url).mock(
+                    side_effect=post_fence_token_side_effect
+                )
+
+                # mock getting token for `externaldata-keycloak` IDP
+                other_token_url = "https://external.data.repository/auth/realms/xyz/protocol/openid-connect/token"
+                respx_mock.post(other_token_url).mock(
                     side_effect=post_fence_token_side_effect
                 )
 

@@ -87,8 +87,6 @@ def test_authorize_endpoint(client, test_user, db_session, auth_header):
         {"refresh_token": fake_tokens["default"], "id_token": "eyJhbGciOiJ"},
         # returned object for IdP "idp_a":
         {"refresh_token": fake_tokens["idp_a"], "id_token": "eyJhbGciOiJ"},
-        # returned object for IdP "idp_a":
-        {"refresh_token": fake_tokens["idp_a"], "id_token": "eyJhbGciOiJ"},
     ]
     patched_fetch_access_token = mock.patch(
         "authlib.oauth2.client.OAuth2Client.fetch_token", mocked_response
@@ -204,7 +202,7 @@ def test_app_config(app):
     assert app.config["OIDC"]["idp_a"]["state_prefix"] == "test"
     assert (
         app.config["OIDC"]["externaldata-keycloak"]["authorize_url"]
-        == "https://some.data.commons/auth/realms/xyz/protocol/openid-connect/auth"
+        == "https://external.data.repository/auth/realms/xyz/protocol/openid-connect/auth"
     )
     assert app.config["OIDC"]["externaldata-keycloak"]["username_field"] == "email"
     assert (
