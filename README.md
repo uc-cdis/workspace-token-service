@@ -106,9 +106,9 @@ Also note that the OIDC clients you create must be granted `read-storage` access
 Data Commons via the data-commons' `user.yaml`.
 
 The `id_token_username` property for OIDC clients can be configured with `.` in between strings for a nested username inside a token.
-For example if the token jwt has username encoded in the json as `token["context"]["user"]["name"]`.
-We can write this in the paramaters as `"id_token_username": "context.user.name"`
-The default if nothing is specified for a fence client it defaults to `"context.user.name"` for a non-fence client the default is `"email"`
+For example if the token jwt has username encoded in the json as `token["context"]["user"]["name"]`:
+We can write this in the parameters as `"id_token_username": "context.user.name"`.
+If nothing is specified, for a fence client the default is `"context.user.name"`, for a non-fence client the default is `"email"`.
 
 
 The `redirect_uri` property for external OIDC providers is
