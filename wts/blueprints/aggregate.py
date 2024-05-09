@@ -50,6 +50,8 @@ async def get_aggregate_response(endpoint):
     # Initialzing refresh tokens with the keys of all the commons.
     # This is needed to treat requests to un-connected commons as open access requests
 
+    # /!\ This does not support users being logged into more than 1 IDP for each Commons!!
+    # https://ctds-planx.atlassian.net/browse/PXP-11324
     refresh_tokens = {
         commons: None for commons in flask.current_app.config["COMMONS_HOSTNAMES"]
     }
@@ -142,6 +144,11 @@ async def make_request(commons_hostname, endpoint, headers, parameters, filters)
             "Status code {} returned from {}".format(
                 e.response.status_code, e.request.url
             )
+        )
+        return failure_indicator
+    except Exception as e:
+        flask.current_app.logger.error(
+            "Failed to get response from {}.".format(endpoint_url)
         )
         return failure_indicator
 

@@ -1,4 +1,6 @@
 import httpx
+import json
+import os
 import uuid
 
 from .conftest import (
@@ -6,6 +8,15 @@ from .conftest import (
     assert_authz_mapping_for_test_user_in_idp_a_commons,
     assert_authz_mapping_for_user_without_access_token,
 )
+
+
+def get_number_of_configured_idps():
+    with open(os.environ["SECRET_CONFIG"], "r") as f:
+        external_idps = json.load(f)["external_oidc"]
+    count = 0
+    for provider in external_idps:
+        count += len(provider.get("login_options", {}))
+    return count
 
 
 def test_aggregate_user_user_endpoint(
@@ -18,7 +29,7 @@ def test_aggregate_user_user_endpoint(
     """
     res = client.get("/aggregate/user/user", headers=auth_header)
     assert res.status_code == 200
-    assert len(res.json) == 2
+    assert len(res.json) == get_number_of_configured_idps()
 
     default_commons_hostname = app.config["OIDC"]["default"]["commons_hostname"]
     assert default_commons_hostname in res.json
@@ -45,7 +56,7 @@ def test_aggregate_user_user_endpoint_with_filters(
         "/aggregate/user/user?filters=authz&filters=role", headers=auth_header
     )
     assert res.status_code == 200
-    assert len(res.json) == 2
+    assert len(res.json) == get_number_of_configured_idps()
 
     default_commons_hostname = app.config["OIDC"]["default"]["commons_hostname"]
     assert default_commons_hostname in res.json
@@ -95,7 +106,7 @@ def test_aggregate_endpoint_when_one_linked_commons_returns_500(
     respx_mock.get(f"{idp_a_fence_url}/user").mock(return_value=httpx.Response(500))
     res = client.get("/aggregate/user/user", headers=auth_header)
     assert res.status_code == 200
-    assert len(res.json) == 2
+    assert len(res.json) == get_number_of_configured_idps()
 
     default_commons_hostname = app.config["OIDC"]["default"]["commons_hostname"]
     assert default_commons_hostname in res.json
@@ -152,7 +163,7 @@ def test_aggregate_authz_mapping_endpoint_with_no_connected_commons(
     """
     res = client.get("/aggregate/authz/mapping", headers=auth_header)
     assert res.status_code == 200
-    assert len(res.json) == 2
+    assert len(res.json) == get_number_of_configured_idps()
 
     default_commons_hostname = app.config["OIDC"]["default"]["commons_hostname"]
     assert default_commons_hostname in res.json
@@ -180,7 +191,7 @@ def test_aggregate_authz_mapping_endpoint_with_connected_commons(
     """
     res = client.get("/aggregate/authz/mapping", headers=auth_header)
     assert res.status_code == 200
-    assert len(res.json) == 2
+    assert len(res.json) == get_number_of_configured_idps()
 
     default_commons_hostname = app.config["OIDC"]["default"]["commons_hostname"]
     assert default_commons_hostname in res.json

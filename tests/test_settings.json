@@ -21,6 +21,24 @@
                     "params": {"idp": "fence", "fence_idp": "shibboleth"}
                 }
             }
+        },
+        {
+            "base_url": "https://external.data.repository",
+            "oidc_client_id": "test3",
+            "oidc_client_secret": "test3",
+            "redirect_uri": "https://workspace.planx-pla.net/wts-callback",
+            "login_options": {
+                "externaldata-keycloak": {
+                    "name": "keycloak Login",
+                    "params": {
+                        "idp": "keycloak",
+                        "auth_url": "auth/realms/xyz/protocol/openid-connect/auth",
+                        "token_url": "auth/realms/xyz/protocol/openid-connect/token",
+                        "id_token_username": "email",
+                        "scope": "openid profile offline_access"
+                   }
+                }
+            }
         }
     ]
 }
