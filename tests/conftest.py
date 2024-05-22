@@ -35,11 +35,11 @@ def test_settings():
 
 @pytest.fixture(scope="session")
 def app():
-    test_settings()
-    setup_test_database()
     with service_app.app_context():
+        test_settings()
+        setup_test_database()
         setup_app(service_app)
-    return service_app
+        return service_app
 
 
 def setup_test_database():
@@ -65,14 +65,17 @@ def other_user():
 def db(app, request):
     """Session-wide test database."""
 
-    def teardown():
-        _db.drop_all()
+    with app.app_context():
 
-    _db.app = app
-    _db.create_all()
+        def teardown():
+            with app.app_context():
+                _db.drop_all()
 
-    request.addfinalizer(teardown)
-    return _db
+        _db.app = app
+        _db.create_all()
+
+        request.addfinalizer(teardown)
+        return _db
 
 
 @pytest.fixture(scope="function")
@@ -81,7 +84,7 @@ def db_session(db, request):
     connection = db.engine.connect()
     transaction = connection.begin()
     options = dict(bind=connection, binds={})
-    session = db.create_scoped_session(options=options)
+    session = db._make_scoped_session(options=options)
     db.session = session
 
     def teardown():
