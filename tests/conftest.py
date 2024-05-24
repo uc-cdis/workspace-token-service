@@ -35,11 +35,11 @@ def test_settings():
 
 @pytest.fixture(scope="session")
 def app():
-    test_settings()
-    setup_test_database()
     with service_app.app_context():
+        test_settings()
+        setup_test_database()
         setup_app(service_app)
-    return service_app
+        return service_app
 
 
 def setup_test_database():
@@ -66,13 +66,15 @@ def db(app, request):
     """Session-wide test database."""
 
     def teardown():
-        _db.drop_all()
+        with app.app_context():
+            _db.drop_all()
 
-    _db.app = app
-    _db.create_all()
+    with app.app_context():
+        _db.app = app
+        _db.create_all()
 
-    request.addfinalizer(teardown)
-    return _db
+        request.addfinalizer(teardown)
+        return _db
 
 
 @pytest.fixture(scope="function")
@@ -85,7 +87,7 @@ def db_session(db, request):
     db.session = session
 
     def teardown():
-        transaction.rollback()
+        session.rollback()
         connection.close()
         session.remove()
 
@@ -199,7 +201,7 @@ def refresh_tokens_json(test_user, other_user):
                 "username": test_user.username,
                 "userid": test_user.userid,
                 "refresh_token": "eyJhbGciOiJ.5",
-                "expires": now - 100,  # expired
+                "expires": now - 101,  # expired
             }
         ],
     }
