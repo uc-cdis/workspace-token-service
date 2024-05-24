@@ -65,12 +65,11 @@ def other_user():
 def db(app, request):
     """Session-wide test database."""
 
+    def teardown():
+        with app.app_context():
+            _db.drop_all()
+
     with app.app_context():
-
-        def teardown():
-            with app.app_context():
-                _db.drop_all()
-
         _db.app = app
         _db.create_all()
 
@@ -84,11 +83,11 @@ def db_session(db, request):
     connection = db.engine.connect()
     transaction = connection.begin()
     options = dict(bind=connection, binds={})
-    session = db._make_scoped_session(options=options)
+    session = db.create_scoped_session(options=options)
     db.session = session
 
     def teardown():
-        transaction.rollback()
+        session.rollback()
         connection.close()
         session.remove()
 
@@ -202,7 +201,7 @@ def refresh_tokens_json(test_user, other_user):
                 "username": test_user.username,
                 "userid": test_user.userid,
                 "refresh_token": "eyJhbGciOiJ.5",
-                "expires": now - 100,  # expired
+                "expires": now - 101,  # expired
             }
         ],
     }
