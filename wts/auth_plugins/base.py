@@ -26,6 +26,9 @@ class AccessTokenPlugin(object):
         flask.current_app.config["OIDC_ISSUER"] = default_oauth_client.metadata[
             "api_base_url"
         ].rstrip("/")
+        flask.current_app.config["USER_API"] = default_oauth_client.metadata[
+            "api_base_url"
+        ].rstrip("/")
 
         user = current_user
         return User(userid=user.id, username=user.username)
