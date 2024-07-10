@@ -127,7 +127,6 @@ def auth_header(test_user, rsa_private_key, default_kid):
     encoded_jwt = jwt.encode(
         claims, headers=token_headers, key=rsa_private_key, algorithm="RS256"
     )
-    encoded_jwt = encoded_jwt.decode("utf-8")
     return [("Authorization", "Bearer {}".format(encoded_jwt))]
 
 
