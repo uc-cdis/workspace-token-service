@@ -105,6 +105,8 @@ def test_authorize_endpoint(client, test_user, db_session, auth_header):
             "exp": now + 100,
             "sub": test_user.userid,
             "scope": ["openid", "access", "user", "test_aud"],
+            "aud": "https://localhost/user",
+            "iss": "https://localhost/user",
         },
         # decoded id_token for IdP "idp_a":
         {"context": {"user": {"name": test_user.username}}},
@@ -114,6 +116,8 @@ def test_authorize_endpoint(client, test_user, db_session, auth_header):
             "exp": now + 100,
             "sub": test_user.userid,
             "scope": ["openid", "access", "user", "test_aud"],
+            "aud": "https://localhost/user",
+            "iss": "https://localhost/user",
         },
     ]
     patched_jwt_decode = mock.patch("jose.jwt.decode", mocked_jwt_response)
