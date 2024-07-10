@@ -100,11 +100,21 @@ def test_authorize_endpoint(client, test_user, db_session, auth_header):
         # decoded id_token for IdP "default":
         {"context": {"user": {"name": test_user.username}}},
         # decoded refresh_token for IdP "default":
-        {"jti": str(uuid.uuid4()), "exp": now + 100, "sub": test_user.userid},
+        {
+            "jti": str(uuid.uuid4()),
+            "exp": now + 100,
+            "sub": test_user.userid,
+            "scope": ["openid", "access", "user", "test_aud"],
+        },
         # decoded id_token for IdP "idp_a":
         {"context": {"user": {"name": test_user.username}}},
         # decoded refresh_token for IdP "idp_a":
-        {"jti": str(uuid.uuid4()), "exp": now + 100, "sub": test_user.userid},
+        {
+            "jti": str(uuid.uuid4()),
+            "exp": now + 100,
+            "sub": test_user.userid,
+            "scope": ["openid", "access", "user", "test_aud"],
+        },
     ]
     patched_jwt_decode = mock.patch("jose.jwt.decode", mocked_jwt_response)
     patched_jwt_decode.start()
