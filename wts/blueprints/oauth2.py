@@ -23,6 +23,7 @@ def connected():
     # to know the issuer
     client = get_oauth_client(idp=requested_idp)
     flask.current_app.config["OIDC_ISSUER"] = client.metadata["api_base_url"].strip("/")
+    flask.current_app.config["USER_API"] = client.metadata["api_base_url"].rstrip("/")
 
     try:
         user = current_user

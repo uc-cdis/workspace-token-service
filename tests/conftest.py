@@ -112,22 +112,22 @@ def auth_header(test_user, rsa_private_key, default_kid):
         List[Tuple[str, str]]: the authorization header
     """
     now = int(time.time())
-    default_audiences = ["openid", "access", "user", "test_aud"]
+    default_scopes = ["openid", "access", "user", "test_aud"]
     claims = {
         "pur": "access",
-        "aud": default_audiences,
+        "aud": "https://localhost/user",
         "sub": test_user.userid,
         "iss": "https://localhost/user",
         "iat": now,
         "exp": now + 600,
         "jti": str(uuid.uuid4()),
+        "scope": default_scopes,
         "context": {"user": {"name": test_user.username, "projects": []}},
     }
     token_headers = {"kid": default_kid}
     encoded_jwt = jwt.encode(
         claims, headers=token_headers, key=rsa_private_key, algorithm="RS256"
     )
-    encoded_jwt = encoded_jwt.decode("utf-8")
     return [("Authorization", "Bearer {}".format(encoded_jwt))]
 
 
