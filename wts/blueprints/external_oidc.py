@@ -124,23 +124,26 @@ def get_refresh_token_expirations(username, idps):
     Returns:
         dict: IdP to expiration of the most recent refresh token, or None if it's expired.
     """
-    now = int(time.time())
-    refresh_tokens = (
-        db.session.query(RefreshToken)
-        .filter_by(username=username)
-        .filter(RefreshToken.idp.in_(idps))
-        .order_by(RefreshToken.expires.asc())
-    )
-    if not refresh_tokens:
-        return {}
-    # the tokens are ordered by oldest to most recent, because we only want
-    # to return None if the most recent token is expired
-    expirations = {idp: None for idp in idps}
-    expirations.update(
-        {
-            t.idp: seconds_to_human_time(t.expires - now)
-            for t in refresh_tokens
-            if t.expires > now
-        }
-    )
-    return expirations
+    try:
+        now = int(time.time())
+        refresh_tokens = (
+            db.session.query(RefreshToken)
+            .filter_by(username=username)
+            .filter(RefreshToken.idp.in_(idps))
+            .order_by(RefreshToken.expires.asc())
+        )
+        if not refresh_tokens:
+            return {}
+        # the tokens are ordered by oldest to most recent, because we only want
+        # to return None if the most recent token is expired
+        expirations = {idp: None for idp in idps}
+        expirations.update(
+            {
+                t.idp: seconds_to_human_time(t.expires - now)
+                for t in refresh_tokens
+                if t.expires > now
+            }
+        )
+        return expirations
+    finally:
+        db.session.close()
