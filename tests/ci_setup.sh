@@ -1,1 +1,1 @@
-psql -c 'create database wts_test;' -U postgres
+psql -c 'create database wts_test;' -U postgres -h localhost
