@@ -29,32 +29,41 @@ def get_data_for_fence_request(refresh_token):
 
 
 def get_access_token(requested_idp, expires=None):
-    if requested_idp not in flask.current_app.oauth2_clients:
-        raise UserError('Requested IdP "{}" is not configured'.format(requested_idp))
-    username = flask.g.user.username
-    flask.current_app.logger.info(
-        "Getting refresh token for user '{}', IdP '{}'".format(username, requested_idp)
-    )
-    refresh_token = (
-        db.session.query(RefreshToken)
-        .filter_by(username=username)
-        .filter_by(idp=requested_idp)
-        .order_by(RefreshToken.expires.desc())
-        .first()
-    )
-    now = int(time.time())
-    if not refresh_token:
-        raise AuthError("User doesn't have a refresh token")
-    if refresh_token.expires <= now:
-        raise AuthError("your refresh token is expired, please login again")
-    url, data, auth = get_data_for_fence_request(refresh_token)
     try:
-        r = httpx.post(url, data=data, auth=auth)
-    except Exception:
-        raise InternalError("Fail to reach fence")
-    if r.status_code != 200:
-        raise InternalError("Fail to get a access token from fence: {}".format(r.text))
-    return r.json()["access_token"]
+        if requested_idp not in flask.current_app.oauth2_clients:
+            raise UserError(
+                'Requested IdP "{}" is not configured'.format(requested_idp)
+            )
+        username = flask.g.user.username
+        flask.current_app.logger.info(
+            "Getting refresh token for user '{}', IdP '{}'".format(
+                username, requested_idp
+            )
+        )
+        refresh_token = (
+            db.session.query(RefreshToken)
+            .filter_by(username=username)
+            .filter_by(idp=requested_idp)
+            .order_by(RefreshToken.expires.desc())
+            .first()
+        )
+        now = int(time.time())
+        if not refresh_token:
+            raise AuthError("User doesn't have a refresh token")
+        if refresh_token.expires <= now:
+            raise AuthError("your refresh token is expired, please login again")
+        url, data, auth = get_data_for_fence_request(refresh_token)
+        try:
+            r = httpx.post(url, data=data, auth=auth)
+        except Exception:
+            raise InternalError("Fail to reach fence")
+        if r.status_code != 200:
+            raise InternalError(
+                "Fail to get a access token from fence: {}".format(r.text)
+            )
+        return r.json()["access_token"]
+    finally:
+        db.session.close()
 
 
 async def async_get_access_token(refresh_token, commons_hostname=None):
