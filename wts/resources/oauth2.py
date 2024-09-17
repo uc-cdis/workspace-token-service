@@ -46,6 +46,7 @@ def find_valid_refresh_token(username, idp):
             flask.current_app.logger.info("Purging expired token {}".format(token.jti))
         else:
             has_valid = True
+    db.session.close()
     return has_valid
 
 
@@ -112,3 +113,4 @@ def refresh_refresh_token(tokens, idp, username_field):
     )
     db.session.add(new_token)
     db.session.commit()
+    db.session.close()
