@@ -30,8 +30,8 @@ def client_do_authorize():
     try:
         tokens = client.fetch_token(
             token_url,
-            **flask.request.args.to_dict(),
-            headers={"User-Agent": "Gen3WTS / 0.4.3"}
+            headers={"User-Agent": "Gen3WTS / 0.4.3"},
+            **flask.request.args.to_dict()
         )
         refresh_refresh_token(tokens, requested_idp, username_field)
     except KeyError as e:
