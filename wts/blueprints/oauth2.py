@@ -95,7 +95,9 @@ def logout_oauth():
     client = get_oauth_client(idp="default")
 
     try:
-        client.session.revoke_token(url, token)
+        client.session.revoke_token(
+            url, token, headers={"User-Agent": "Gen3WTS / 0.4.3"}
+        )
     except APIError as e:
         msg = "could not log out, failed to revoke token: {}".format(e.message)
         return msg, 400
