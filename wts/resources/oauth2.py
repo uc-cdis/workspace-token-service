@@ -28,7 +28,11 @@ def client_do_authorize():
     if mismatched_state:
         raise AuthError("could not authorize; state did not match across auth requests")
     try:
-        tokens = client.fetch_token(token_url, **flask.request.args.to_dict())
+        tokens = client.fetch_token(
+            token_url,
+            **flask.request.args.to_dict(),
+            headers={"User-Agent": "Gen3WTS / 0.4.3"}
+        )
         refresh_refresh_token(tokens, requested_idp, username_field)
     except KeyError as e:
         raise AuthError("error in token response: {}".format(tokens))

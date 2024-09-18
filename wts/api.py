@@ -109,7 +109,6 @@ def load_settings(app):
                 "redirect_uri": redirect_uri,
                 "scope": scope,
                 "state_prefix": state_prefix,
-                "headers": {"User-Agent": "Gen3WTS / 0.4.3"},
             }
 
     app.config["COMMONS_HOSTNAMES"] = list(
