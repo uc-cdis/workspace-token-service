@@ -95,8 +95,9 @@ def logout_oauth():
     client = get_oauth_client(idp="default")
 
     try:
+        app_version = flask.current_app.config.get("APP_VERSION", "0.0.0")
         client.session.revoke_token(
-            url, token, headers={"User-Agent": "Gen3WTS / 0.4.3"}
+            url, token, headers={"User-Agent": f"Gen3WTS / {app_version}"}
         )
     except APIError as e:
         msg = "could not log out, failed to revoke token: {}".format(e.message)
