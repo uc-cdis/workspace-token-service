@@ -6,6 +6,8 @@ import time
 import uuid
 import urllib
 
+from authlib.oauth2.client import OAuth2Client
+
 from wts.models import RefreshToken
 from wts.resources.oauth2 import find_valid_refresh_token
 
@@ -154,6 +156,82 @@ def test_authorize_endpoint(client, test_user, db_session, auth_header):
             assert original_refresh_token == fake_tokens["default"]
         else:
             assert original_refresh_token == fake_tokens["idp_a"]
+
+
+def test_fetch_token_header(client, test_user, db_session, auth_header, app_version):
+    fake_tokens = {"default": "eyJhbGciOiJvvvv", "idp_a": "eyJhbGciOiJwwww"}
+
+    # mock `fetch_access_token` to avoid external calls
+    mocked_response = mock.MagicMock()
+    with mock.patch.object(OAuth2Client, "fetch_token", return_value=mocked_response):
+
+        # mock `jwt.decode` to return fake data
+        now = int(time.time())
+        mocked_jwt_response = mock.MagicMock()
+        mocked_jwt_response.side_effect = [
+            # decoded id_token for IdP "default":
+            {"context": {"user": {"name": test_user.username}}},
+            # decoded refresh_token for IdP "default":
+            {
+                "jti": str(uuid.uuid4()),
+                "exp": now + 100,
+                "sub": test_user.userid,
+                "scope": ["openid", "access", "user", "test_aud"],
+                "aud": "https://localhost/user",
+                "iss": "https://localhost/user",
+            },
+            # decoded id_token for IdP "idp_a":
+            {"context": {"user": {"name": test_user.username}}},
+            # decoded refresh_token for IdP "idp_a":
+            {
+                "jti": str(uuid.uuid4()),
+                "exp": now + 100,
+                "sub": test_user.userid,
+                "scope": ["openid", "access", "user", "test_aud"],
+                "aud": "https://localhost/user",
+                "iss": "https://localhost/user",
+            },
+        ]
+        patched_jwt_decode = mock.patch("jose.jwt.decode", mocked_jwt_response)
+        patched_jwt_decode.start()
+
+        # get refresh token for IdP "default"
+        OAuth2Client.fetch_token.return_value = {
+            "refresh_token": fake_tokens["default"],
+            "id_token": "eyJhbGciOiJ",
+        }
+        fake_state = "qwerty"
+        with client.session_transaction() as session:
+            session["state"] = fake_state
+        res = client.get(
+            "/oauth2/authorize?state={}".format(fake_state), headers=auth_header
+        )
+        OAuth2Client.fetch_token.assert_called
+        OAuth2Client.fetch_token.assert_called_with(
+            "https://localhost/user/oauth2/token",
+            headers={"User-Agent": f"Gen3WTS / {app_version}"},
+            state=fake_state,
+        )
+        assert res.status_code == 200, res.json
+
+        # get refresh token for IdP "idp_a"
+        OAuth2Client.fetch_token.return_value = {
+            "refresh_token": fake_tokens["idp_a"],
+            "id_token": "eyJhbGciOiJ",
+        }
+        with client.session_transaction() as session:
+            session["state"] = fake_state
+            session["idp"] = "idp_a"
+        res = client.get(
+            "/oauth2/authorize?state={}".format(fake_state), headers=auth_header
+        )
+        OAuth2Client.fetch_token.assert_called
+        OAuth2Client.fetch_token.assert_called_with(
+            "https://some.data.commons/user/oauth2/token",
+            headers={"User-Agent": f"Gen3WTS / {app_version}"},
+            state=fake_state,
+        )
+        assert res.status_code == 200
 
 
 def test_authorization_url_endpoint(client):

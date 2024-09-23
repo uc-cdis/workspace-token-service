@@ -61,6 +61,11 @@ def other_user():
     return User(userid="123456", username="someone_else")
 
 
+@pytest.fixture(scope="function")
+def app_version():
+    return service_app.config.get("APP_VERSION")
+
+
 @pytest.fixture(scope="session")
 def db(app, request):
     """Session-wide test database."""
