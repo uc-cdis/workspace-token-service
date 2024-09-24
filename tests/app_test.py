@@ -1,3 +1,4 @@
+from urllib.parse import urljoin
 import flask
 import json
 import mock
@@ -7,6 +8,7 @@ import uuid
 import urllib
 
 from authlib.oauth2.client import OAuth2Client
+from authlib.integrations.requests_client import OAuth2Session
 
 from wts.models import RefreshToken
 from wts.resources.oauth2 import find_valid_refresh_token
@@ -158,8 +160,9 @@ def test_authorize_endpoint(client, test_user, db_session, auth_header):
             assert original_refresh_token == fake_tokens["idp_a"]
 
 
-def test_fetch_token_header(client, test_user, db_session, auth_header, app_version):
+def test_fetch_token_header(client, test_user, db_session, auth_header, app):
     fake_tokens = {"default": "eyJhbGciOiJvvvv", "idp_a": "eyJhbGciOiJwwww"}
+    app_version = app.config.get("APP_VERSION")
 
     # mock `fetch_access_token` to avoid external calls
     mocked_response = mock.MagicMock()
@@ -206,7 +209,6 @@ def test_fetch_token_header(client, test_user, db_session, auth_header, app_vers
         res = client.get(
             "/oauth2/authorize?state={}".format(fake_state), headers=auth_header
         )
-        OAuth2Client.fetch_token.assert_called
         OAuth2Client.fetch_token.assert_called_with(
             "https://localhost/user/oauth2/token",
             headers={"User-Agent": f"Gen3WTS / {app_version}"},
@@ -225,7 +227,6 @@ def test_fetch_token_header(client, test_user, db_session, auth_header, app_vers
         res = client.get(
             "/oauth2/authorize?state={}".format(fake_state), headers=auth_header
         )
-        OAuth2Client.fetch_token.assert_called
         OAuth2Client.fetch_token.assert_called_with(
             "https://some.data.commons/user/oauth2/token",
             headers={"User-Agent": f"Gen3WTS / {app_version}"},
@@ -283,6 +284,23 @@ def test_external_oidc_endpoint_with_persisted_refresh_tokens(
             assert provider["refresh_token_expiration"] != None
         else:
             assert provider["refresh_token_expiration"] == None
+
+
+def test_revoke_token_header(client, auth_header, app):
+
+    url = urljoin(app.config.get("USER_API"), "/oauth2/revoke")
+    app_version = app.config.get("APP_VERSION")
+
+    with mock.patch.object(
+        OAuth2Session,
+        "revoke_token",
+    ):
+        res = client.get("/oauth2/logout", headers=auth_header)
+        assert res.status_code == 204
+        assert res.text == ""
+        OAuth2Session.revoke_token.assert_called_with(
+            url, None, headers={"User-Agent": f"Gen3WTS / {app_version}"}
+        )
 
 
 def test_app_config(app):
