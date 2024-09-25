@@ -211,7 +211,7 @@ def test_fetch_token_header(client, test_user, db_session, auth_header, app):
         )
         OAuth2Client.fetch_token.assert_called_with(
             "https://localhost/user/oauth2/token",
-            headers={"User-Agent": f"Gen3WTS / {app_version}"},
+            headers={"User-Agent": f"Gen3WTS/{app_version}"},
             state=fake_state,
         )
         assert res.status_code == 200, res.json
@@ -229,7 +229,7 @@ def test_fetch_token_header(client, test_user, db_session, auth_header, app):
         )
         OAuth2Client.fetch_token.assert_called_with(
             "https://some.data.commons/user/oauth2/token",
-            headers={"User-Agent": f"Gen3WTS / {app_version}"},
+            headers={"User-Agent": f"Gen3WTS/{app_version}"},
             state=fake_state,
         )
         assert res.status_code == 200
@@ -299,7 +299,7 @@ def test_revoke_token_header(client, auth_header, app):
         assert res.status_code == 204
         assert res.text == ""
         OAuth2Session.revoke_token.assert_called_with(
-            url, None, headers={"User-Agent": f"Gen3WTS / {app_version}"}
+            url, None, headers={"User-Agent": f"Gen3WTS/{app_version}"}
         )
 
 
