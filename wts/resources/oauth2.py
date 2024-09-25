@@ -31,7 +31,7 @@ def client_do_authorize():
         app_version = flask.current_app.config.get("APP_VERSION", "0.0.0")
         tokens = client.fetch_token(
             token_url,
-            headers={"User-Agent": f"Gen3WTS / {app_version}"},
+            headers={"User-Agent": f"Gen3WTS/{app_version}"},
             **flask.request.args.to_dict(),
         )
         refresh_refresh_token(tokens, requested_idp, username_field)
