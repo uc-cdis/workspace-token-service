@@ -3,6 +3,7 @@ from authlib.common.urls import add_params_to_uri
 from cryptography.fernet import Fernet
 import flask
 from flask import Flask
+from importlib import metadata
 import json
 from urllib.parse import urlparse, urljoin
 from cdislogging import get_logger
@@ -120,6 +121,7 @@ def load_settings(app):
     app.config["SESSION_COOKIE_NAME"] = "wts"
     app.config["SESSION_COOKIE_SECURE"] = True
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["APP_VERSION"] = metadata.version("wts")
 
 
 def _log_and_jsonify_exception(e):
