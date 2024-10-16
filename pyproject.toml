@@ -12,7 +12,7 @@ authutils = "^6.0.0"
 cdiserrors = "^1.0.0"
 cdislogging = "^1.0.0"
 cryptography = ">=42.0.0"
-gunicorn = ">=21.2.0"
+gunicorn = ">=22.0.0"
 Flask = {version = "^2.2.5", extras = ["async"]}
 Flask-SQLAlchemy = "^2.3.0"
 SQLAlchemy = "1.4"
