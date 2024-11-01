@@ -1,4 +1,4 @@
 #!/bin/bash
 
 nginx
-gunicorn -c "/wts/deployment/wsgi/gunicorn.conf.py"
+poetry run gunicorn -c "/wts/deployment/wsgi/gunicorn.conf.py"
