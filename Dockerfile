@@ -32,6 +32,9 @@ FROM base
 
 COPY --from=builder /$appname /$appname
 
+RUN mkdir -p /var/www/$appname \
+&& chown gen3:gen3 /var/www/$appname
+
 # Switch to non-root user 'gen3' for the serving process
 USER gen3
 
