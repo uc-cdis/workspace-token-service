@@ -25,7 +25,7 @@ def get_username_from_ip(ip):
             pod.metadata.annotations
             and POD_USERNAME_ANNOTATION in pod.metadata.annotations
         ):
-            flask.current_app.logger.info(
+            flask.current_app.logger.debug(
                 "Found username {} for IP {}".format(
                     pod.metadata.annotations[POD_USERNAME_ANNOTATION], ip
                 )
@@ -35,7 +35,7 @@ def get_username_from_ip(ip):
             pod.metadata.annotations
             and JUPYTER_POD_ANNOTATION in pod.metadata.annotations
         ):
-            flask.current_app.logger.info(
+            flask.current_app.logger.debug(
                 "Found username {} for IP {}".format(
                     pod.metadata.annotations[JUPYTER_POD_ANNOTATION], ip
                 )
@@ -43,7 +43,7 @@ def get_username_from_ip(ip):
             return pod.metadata.annotations[JUPYTER_POD_ANNOTATION]
 
     # No matching pod found
-    flask.current_app.logger.info("No username found for IP {}".format(ip))
+    flask.current_app.logger.debug("No username found for IP {}".format(ip))
     return None
 
 
