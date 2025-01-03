@@ -10,7 +10,7 @@ JUPYTER_POD_ANNOTATION = "hub.jupyter.org/username"
 
 
 def get_username_from_ip(ip):
-    flask.current_app.logger.info("Getting username from IP {}".format(ip))
+    flask.current_app.logger.debug("Getting username from IP {}".format(ip))
     # Fail if we can't load kubernetes config...
     try:
         kubernetes.config.load_incluster_config()
