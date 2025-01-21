@@ -14,9 +14,14 @@ from .models import db, Base, RefreshToken
 from .utils import get_config_var as get_var
 from .version_data import VERSION, COMMIT
 
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 
 app = Flask(__name__)
 app.logger = get_logger(__name__, log_level="info")
+
+# https://flask.palletsprojects.com/en/stable/deploying/proxy_fix/
+app.wsgi_app = ProxyFix(app.wsgi_app)
 
 
 def load_settings(app):

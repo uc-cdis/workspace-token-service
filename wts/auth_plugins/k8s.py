@@ -10,6 +10,7 @@ JUPYTER_POD_ANNOTATION = "hub.jupyter.org/username"
 
 
 def get_username_from_ip(ip):
+    flask.current_app.logger.debug("Getting username from IP {}".format(ip))
     # Fail if we can't load kubernetes config...
     try:
         kubernetes.config.load_incluster_config()
@@ -24,14 +25,25 @@ def get_username_from_ip(ip):
             pod.metadata.annotations
             and POD_USERNAME_ANNOTATION in pod.metadata.annotations
         ):
+            flask.current_app.logger.debug(
+                "Found username {} for IP {}".format(
+                    pod.metadata.annotations[POD_USERNAME_ANNOTATION], ip
+                )
+            )
             return pod.metadata.annotations[POD_USERNAME_ANNOTATION]
         elif (
             pod.metadata.annotations
             and JUPYTER_POD_ANNOTATION in pod.metadata.annotations
         ):
+            flask.current_app.logger.debug(
+                "Found username {} for IP {}".format(
+                    pod.metadata.annotations[JUPYTER_POD_ANNOTATION], ip
+                )
+            )
             return pod.metadata.annotations[JUPYTER_POD_ANNOTATION]
 
     # No matching pod found
+    flask.current_app.logger.debug("No username found for IP {}".format(ip))
     return None
 
 
