@@ -314,7 +314,7 @@ def test_app_config(app):
         app.config["OIDC"]["externaldata-keycloak"]["authorize_url"]
         == "https://external.data.repository/auth/realms/xyz/protocol/openid-connect/auth"
     )
-    assert app.config["OIDC"]["externaldata-keycloak"]["username_field"] == "email"
+    assert app.config["OIDC"]["externaldata-keycloak"]["username_field"] == "user.email"
     assert (
         app.config["OIDC"]["default"]["redirect_uri"]
         == "https://test.workspace.planx-pla.net/wts/oauth2/authorize"
