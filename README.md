@@ -87,7 +87,7 @@ Two methods exist for authenticating a request to the `/token` endpoint:
                         "idp": "keycloak",
                         "auth_url": "auth/realms/xyz/protocol/openid-connect/auth",
                         "token_url": "auth/realms/xyz/protocol/openid-connect/token",
-                        "id_token_username": "email",
+                        "id_token_username_field": "email",
                         "scope": "openid profile offline_access"
                    }
                 }
@@ -105,9 +105,9 @@ Note that IDP IDs (`other-google` and `other-orcid` in the example above) must b
 Also note that the OIDC clients you create must be granted `read-storage` access to all the data in the external
 Data Commons via the data-commons' `user.yaml`.
 
-The `id_token_username` property for OIDC clients can be configured with `.` in between strings for a nested username inside a token.
+The `id_token_username_field` property for OIDC clients can be configured with `.` in between strings for a nested username inside a token.
 For example if the token jwt has username encoded in the json as `token["context"]["user"]["name"]`:
-We can write this in the parameters as `"id_token_username": "context.user.name"`.
+We can write this in the parameters as `"id_token_username_field": "context.user.name"`.
 If nothing is specified, for a fence client the default is `"context.user.name"`, for a non-fence client the default is `"email"`.
 
 
