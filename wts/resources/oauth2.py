@@ -2,6 +2,7 @@ from authlib.common.errors import AuthlibBaseError
 from datetime import datetime
 import flask
 from jose import jwt
+import uuid
 
 from authutils.user import current_user
 from cdiserrors import AuthError
@@ -108,11 +109,18 @@ def refresh_refresh_token(tokens, idp, username_field):
             idp_username, idp, username
         )
     )
+    jti_value = content.get("jti")
+    if jti_value is None:
+        jti_value = str(uuid.uuid4())
+        flask.current_app.logger.warning(
+            f"Missing 'jti' field in token response for user {userid}. Generated UUID: {jti_value} and used as 'jti' in our db. Note that the token issuer is not directly made aware of this association."
+        )
+
     new_token = RefreshToken(
         token=refresh_token,
         userid=userid,
         username=username,
-        jti=content["jti"],
+        jti=jti_value,
         expires=content["exp"],
         idp=idp,
     )
