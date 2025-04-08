@@ -113,7 +113,7 @@ def refresh_refresh_token(tokens, idp, username_field):
     if jti_value is None:
         jti_value = str(uuid.uuid4())
         flask.current_app.logger.warning(
-            f"Missing 'jti' field in token response for user {userid}. Generated UUID: {jti_value}"
+            f"Missing 'jti' field in token response for user {userid}. Generated UUID: {jti_value} and used as 'jti' in our db. Note that the token issuer is not directly made aware of this association."
         )
 
     new_token = RefreshToken(
