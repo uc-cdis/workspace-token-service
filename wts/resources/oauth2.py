@@ -120,7 +120,7 @@ def refresh_refresh_token(tokens, idp, username_field):
         token=refresh_token,
         userid=userid,
         username=username,
-        jti=jti_value
+        jti=jti_value,
         expires=content["exp"],
         idp=idp,
     )
