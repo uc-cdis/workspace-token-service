@@ -1,17 +1,17 @@
 [tool.poetry]
 name = "wts"
-version = "0.4.3"
+version = "0.4.4"
 description = "Workspace Token Service"
 authors = ["CTDS UChicago <cdis@uchicago.edu>"]
 license = "Apache-2.0"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9.2, <3.10"
 alembic = "^1.4.1"
-authutils = "^6.0.0"
+authutils = ">=6.2.7, <7"
 cdiserrors = "^1.0.0"
 cdislogging = "^1.0.0"
-cryptography = ">=42.0.0"
+cryptography = "^44.0.1"
 gunicorn = ">=22.0.0"
 Flask = {version = "^2.2.5", extras = ["async"]}
 Flask-SQLAlchemy = "^2.3.0"
