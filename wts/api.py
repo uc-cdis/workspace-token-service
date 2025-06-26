@@ -169,7 +169,7 @@ def health_check():
     Health check endpoint
     """
     try:
-        db.session.query(RefreshToken).first()
+        db.session.execute("SELECT 1 FROM refresh_token")
         return "Healthy", 200
     except Exception as e:
         app.logger.exception("Unable to query DB: {}".format(e))
