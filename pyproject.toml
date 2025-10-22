@@ -8,7 +8,7 @@ license = "Apache-2.0"
 [tool.poetry.dependencies]
 python = ">=3.9.2, <3.10"
 alembic = "^1.4.1"
-authutils = ">=6.2.7,<8"
+authutils = { git = "https://github.com/uc-cdis/authutils.git", branch = "chore/bump-authlib" }
 cdiserrors = "^1.0.0"
 cdislogging = "^1.0.0"
 cryptography = "^44.0.1"
