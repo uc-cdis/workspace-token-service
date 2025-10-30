@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wts"
-version = "0.4.4"
+version = "0.4.5"
 description = "Workspace Token Service"
 authors = ["CTDS UChicago <cdis@uchicago.edu>"]
 license = "Apache-2.0"
@@ -8,7 +8,7 @@ license = "Apache-2.0"
 [tool.poetry.dependencies]
 python = ">=3.9.2, <3.10"
 alembic = "^1.4.1"
-authutils = ">=6.2.7,<8"
+authutils = ">=7.1.0"
 cdiserrors = "^1.0.0"
 cdislogging = "^1.0.0"
 cryptography = "^44.0.1"
