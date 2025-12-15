@@ -1,35 +1,34 @@
 [tool.poetry]
 name = "wts"
-version = "0.4.5"
+version = "0.4.6"
 description = "Workspace Token Service"
 authors = ["CTDS UChicago <cdis@uchicago.edu>"]
 license = "Apache-2.0"
 
 [tool.poetry.dependencies]
 python = ">=3.9.2, <3.10"
-alembic = "^1.4.1"
+alembic = ">=1.4.1"
 authutils = ">=7.1.0"
-cdiserrors = "^1.0.0"
-cdislogging = "^1.0.0"
-cryptography = "^44.0.1"
+cdiserrors = ">=1.0.0"
+cdislogging = ">=1.0.0"
+cryptography = ">=44.0.1"
 gunicorn = ">=22.0.0"
 Flask = {version = "^2.2.5", extras = ["async"]}
-Flask-SQLAlchemy = "^2.3.0"
+Flask-SQLAlchemy = ">=2.3.0"
 SQLAlchemy = "1.4"
-httpx = "^0.23.0"
-kubernetes = "^11.0.0"
+httpx = ">=0.23.0"
+kubernetes = ">=11.0.0"
 psycopg2-binary = ">=2.7"
-python-jose = "^3.4.0"
-pyyaml = "^6.0.1"
-jinja2 = ">=3.1.5"
+python-jose = ">=3.4.0"
 
 [tool.poetry.group.dev.dependencies]
 codacy-coverage = "^1.3.11"
-mock = "^4.0.3"
-pytest = "^8.2.0"
-pytest-cov = "^3.0.0"
-pytest-flask = "^1.2.0"
-respx = "^0.20.1"
+mock = ">=4.0.3"
+pytest = ">=8.2.0"
+pytest-cov = ">=3.0.0"
+pytest-flask = ">=1.2.0"
+respx = ">=0.20.1"
+deptry = "^0.23.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
