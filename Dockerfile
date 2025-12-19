@@ -1,7 +1,6 @@
-ARG AZLINUX_BASE_VERSION=master
+ARG AZLINUX_BASE_VERSION=3.13-pythonnginx
 
-# Base stage with python-build-base
-FROM quay.io/cdis/python-nginx-al:${AZLINUX_BASE_VERSION} AS base
+FROM quay.io/cdis/amazonlinux-base:${AZLINUX_BASE_VERSION} AS base
 
 ENV appname=wts
 
@@ -22,9 +21,6 @@ RUN poetry install -vv --no-root --only main --no-interaction
 COPY --chown=gen3:gen3 . /${appname}
 COPY --chown=gen3:gen3 ./deployment/wsgi/wsgi.py /${appname}/wsgi.py
 
-# install the app
-RUN poetry install --without dev --no-interaction
-
 RUN git config --global --add safe.directory ${appname} && COMMIT=`git rev-parse HEAD` && echo "COMMIT=\"${COMMIT}\"" > ${appname}/version_data.py \
     && VERSION=`git describe --always --tags` && echo "VERSION=\"${VERSION}\"" >> ${appname}/version_data.py
 
@@ -36,4 +32,12 @@ COPY --from=builder /${appname} /${appname}
 # Switch to non-root user 'gen3' for the serving process
 USER gen3
 
-CMD ["/bin/bash", "-c", "/wts/dockerrun.bash"]
+# Install into existing venv
+ENV VIRTUAL_ENV=/venv
+ENV PATH="/venv/bin:${PATH}"
+ENV POETRY_VIRTUALENVS_CREATE=false
+
+# install the app
+RUN poetry install --without dev --no-interaction
+
+CMD ["/bin/bash", "-c", "/${appname}/dockerrun.bash"]
