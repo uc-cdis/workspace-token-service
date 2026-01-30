@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wts"
-version = "0.5.0"
+version = "0.6.0"
 description = "Workspace Token Service"
 authors = ["CTDS UChicago <cdis@uchicago.edu>"]
 license = "Apache-2.0"
@@ -15,7 +15,7 @@ cryptography = ">=44.0.1"
 gunicorn = ">=22.0.0"
 Flask = {version = "^2.2.5", extras = ["async"]}
 Flask-SQLAlchemy = ">=2.3.0"
-SQLAlchemy = "1.4"
+SQLAlchemy = ">=2.0.0"
 httpx = ">=0.23.0"
 kubernetes = ">=11.0.0"
 psycopg2-binary = ">=2.7"
