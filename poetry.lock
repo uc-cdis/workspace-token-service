@@ -2,22 +2,21 @@
 
 [[package]]
 name = "alembic"
-version = "1.18.2"
+version = "1.7.0"
 description = "A database migration tool for SQLAlchemy."
 optional = false
-python-versions = ">=3.10"
+python-versions = ">=3.6"
 files = [
-    {file = "alembic-1.18.2-py3-none-any.whl", hash = "sha256:18a5f6448af4864cc308aadf33eb37c0116da9a60fd9bb3f31ccb1b522b4a9b9"},
-    {file = "alembic-1.18.2.tar.gz", hash = "sha256:1c3ddb635f26efbc80b1b90c5652548202022d4e760f6a78d6d85959280e3684"},
+    {file = "alembic-1.7.0-py3-none-any.whl", hash = "sha256:0b7c21a6c4abfa55316c0e77740162163364cb2d1b57422f9bdad7fc835716cf"},
+    {file = "alembic-1.7.0.tar.gz", hash = "sha256:10faf4d6a488d317f6e6439ed44c31e00473bc79bc5f255095a4ea5d12b8152c"},
 ]
 
 [package.dependencies]
 Mako = "*"
-SQLAlchemy = ">=1.4.0"
-typing-extensions = ">=4.12"
+SQLAlchemy = ">=1.3.0"
 
 [package.extras]
-tz = ["tzdata"]
+tz = ["python-dateutil"]
 
 [[package]]
 name = "anyio"
@@ -1556,17 +1555,6 @@ anyio = ">=3.6.2,<5"
 full = ["httpx (>=0.27.0,<0.29.0)", "itsdangerous", "jinja2", "python-multipart (>=0.0.18)", "pyyaml"]
 
 [[package]]
-name = "typing-extensions"
-version = "4.15.0"
-description = "Backported and Experimental Type Hints for Python 3.9+"
-optional = false
-python-versions = ">=3.9"
-files = [
-    {file = "typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548"},
-    {file = "typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466"},
-]
-
-[[package]]
 name = "urllib3"
 version = "2.6.3"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -1630,4 +1618,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.13, <4"
-content-hash = "bd716c6bdc4f3a6f488406403b0d1c5b51f0a42a0eea3d0f007b23c6637a7b4f"
+content-hash = "8f93f181465055f66ad3532ccefabb7e53816eff88143a97a4ffe31ba4ce9f21"
