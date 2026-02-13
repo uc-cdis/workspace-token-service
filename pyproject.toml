@@ -9,7 +9,7 @@ license = "Apache-2.0"
 python = ">=3.13, <4"
 # Keep Constraint for alembic, can be removed when SQLAlchemy updated to next version
 alembic = ">=1.4.1,<=1.7.0"
-# authutils = ">=7.1.2"
+# authutils = ">=7.2.2"
 authutils = {git = "https://github.com/uc-cdis/authutils", rev = "dependabot/pip/cryptography-46.0.5"}
 cdiserrors = ">=1.0.0"
 cdislogging = ">=1.0.0"
