@@ -69,36 +69,32 @@ cryptography = "*"
 
 [[package]]
 name = "authutils"
-version = "7.2.1"
+version = "7.2.2"
 description = "Gen3 auth utility functions"
 optional = false
-python-versions = ">=3.13, <4.0"
+python-versions = "<4.0,>=3.13"
 groups = ["main"]
-files = []
-develop = false
+files = [
+    {file = "authutils-7.2.2-py3-none-any.whl", hash = "sha256:7d7b247938f7c3589fbde537bfa818ff3aec78c2f37586c47866ef1ec6ba7cab"},
+    {file = "authutils-7.2.2.tar.gz", hash = "sha256:4d3e094cf412dcefca55c708b5c86878e984bd39a1eaa22959d1d38038fff575"},
+]
 
 [package.dependencies]
 authlib = ">=1.6.5"
-cached-property = "~=1.4"
+cached-property = ">=1.4,<2.0"
 cdiserrors = "*"
 cdislogging = "*"
-cryptography = ">=44.0.1,<47.0.0"
+cryptography = ">=46.0.0"
 httpx = ">=0.23.0,<1.0.0"
 pyjwt = {version = ">=2.4.0,<3.0", extras = ["crypto"]}
 starlette = "*"
 werkzeug = "*"
-xmltodict = "~=0.9"
+xmltodict = ">=0.9,<1.0"
 
 [package.extras]
 datamodelutils = ["datamodelutils"]
-fastapi = ["fastapi (>=0.65.2,<0.66.0)"]
-flask = ["Flask (<=2.3.3)"]
-
-[package.source]
-type = "git"
-url = "https://github.com/uc-cdis/authutils"
-reference = "dependabot/pip/cryptography-46.0.5"
-resolved_reference = "1095c7dae847b555554b9e514595cbc0214d3d3b"
+fastapi = ["fastapi"]
+flask = ["Flask"]
 
 [[package]]
 name = "blinker"
@@ -1713,4 +1709,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13, <4"
-content-hash = "7b7ec84d4ddc0add9aa53bd77c46e2fb298e0568f547fd47408b2f746b657a00"
+content-hash = "2501a8db40942e6f38b36b3e1d6498b240cd98017e517d998acd8142a23ef1fb"
