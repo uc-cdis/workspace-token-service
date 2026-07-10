@@ -115,7 +115,7 @@ def auth_header(test_user, rsa_private_key, default_kid):
     default_scopes = ["openid", "access", "user", "test_aud"]
     claims = {
         "pur": "access",
-        "aud": "https://localhost/user",
+        "aud": "gen3",
         "sub": test_user.userid,
         "iss": "https://localhost/user",
         "iat": now,
