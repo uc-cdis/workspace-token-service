@@ -7,6 +7,7 @@ import mock
 import pytest
 import os
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import scoped_session, sessionmaker
 import time
 import uuid
 import urllib
@@ -82,8 +83,7 @@ def db_session(db, request):
     """Creates a new database session for a test."""
     connection = db.engine.connect()
     transaction = connection.begin()
-    options = dict(bind=connection, binds={})
-    session = db.create_scoped_session(options=options)
+    session = scoped_session(sessionmaker(bind=connection))
     db.session = session
 
     def teardown():
