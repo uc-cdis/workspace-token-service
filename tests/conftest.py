@@ -2,6 +2,7 @@ from alembic.config import main as alembic_main
 from cryptography.fernet import Fernet
 import flask
 import httpx
+import httpx2
 import jwt
 import mock
 import pytest
@@ -252,7 +253,14 @@ def default_refresh_tokens(default_refresh_tokens_json, db_session):
 
 @pytest.fixture(scope="function")
 def mock_requests(
-    app, respx_mock, refresh_tokens_json, request, client, default_kid, rsa_public_key
+    app,
+    respx_mock,
+    refresh_tokens_json,
+    request,
+    client,
+    default_kid,
+    rsa_public_key,
+    monkeypatch,
 ):
     """
     Mock GET requests for:
@@ -346,11 +354,16 @@ def mock_requests(
         create_mocks_for_user(app, respx_mock)
 
         default_fence_url = app.config["OIDC"]["default"]["api_base_url"].rstrip("/")
-        respx_mock.get(f"{default_fence_url}/jwt/keys").mock(
-            return_value=httpx.Response(
-                200, json={"keys": [[default_kid, rsa_public_key]]}
+
+        # authutils >= 9 fetches keys with httpx2, which respx can't intercept
+        def get_jwt_keys(url, **kwargs):
+            if url != f"{default_fence_url}/jwt/keys":
+                raise httpx2.ConnectError(f"not mocked: {url}")
+            return mock.MagicMock(
+                json=lambda: {"keys": [[default_kid, rsa_public_key]]}
             )
-        )
+
+        monkeypatch.setattr("httpx2.get", get_jwt_keys)
 
     return do_patch
 
