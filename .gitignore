@@ -101,3 +101,7 @@ venv.bak/
 
 # VSCode
 .vscode/
+
+# local env / secrets (never commit)
+.envs
+*.sw[op]
