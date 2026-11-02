@@ -21,6 +21,11 @@ Two methods exist for authenticating a request to the `/token` endpoint:
 
 2) If a JWT access token is not provided, the `idp` parameter is omitted, or `idp=default`, then `WTS` determines the current user from the `gen3username` K8s annotation set for the requesting pod.
 
+> **Note:** method 2 identifies the caller by the requesting pod's IP. `WTS` runs
+> behind nginx in the same container: nginx listens on port 80 and appends the
+> client address to `X-Forwarded-For`, and gunicorn only listens on
+> `127.0.0.1:8000`. Requests should always go through nginx (port 80).
+
 <img src="docs/img/architecture.svg">
 
 

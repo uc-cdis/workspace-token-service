@@ -81,6 +81,25 @@ def test_token_endpoint_without_auth_header(client, persisted_refresh_tokens):
     assert res.status_code == 403
 
 
+def test_k8s_lookup_uses_proxy_client_addr(client, persisted_refresh_tokens):
+    """
+    WTS runs behind nginx, which appends the client address to
+    X-Forwarded-For. The k8s plugin should look up the user by that last
+    entry, not by any value the client put in the header.
+    """
+    with mock.patch(
+        "wts.auth_plugins.k8s.get_username_from_ip", return_value=None
+    ) as mocked_lookup:
+        res = client.get(
+            "/token/",
+            environ_base={"REMOTE_ADDR": "127.0.0.1"},
+            headers={"X-Forwarded-For": "10.0.0.99, 10.0.0.1"},
+        )
+    mocked_lookup.assert_called_once_with("10.0.0.1")
+    # no pod matched -> unauthenticated
+    assert res.status_code == 403
+
+
 def test_authorize_endpoint(client, test_user, db_session, auth_header):
     fake_tokens = {"default": "eyJhbGciOiJtttt", "idp_a": "eyJhbGciOiJuuuu"}
 
